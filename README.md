@@ -1,0 +1,2 @@
+# entityjumpscares
+test jumpscare scripts.
