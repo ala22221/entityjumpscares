@@ -28,7 +28,7 @@ bg.Parent = gui
 
 local rebound = Instance.new("ImageLabel")
 rebound.Name = "Rebound"
-rebound.Size = UDim2.fromScale(1, 1)
+rebound.Size = UDim2.fromScale(0.5, 0.5)
 rebound.Position = UDim2.fromScale(0, 0)
 rebound.BackgroundTransparency = 1
 rebound.Image = REBOUND_IMAGE
