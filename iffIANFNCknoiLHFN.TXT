@@ -1,0 +1,599 @@
+-- Services
+
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+
+-- Variables
+
+local Plr = Players.LocalPlayer
+
+local admeen = {
+    "alamgir_500newacc"
+}
+
+local function isAdmin(name)
+    name = string.lower(tostring(name))
+
+    for _, adminName in ipairs(admeen) do
+        if string.lower(adminName) == name then
+            return true
+        end
+    end
+
+    return false
+end
+
+local IsAdmin = isAdmin(Plr.Name)
+
+-- Captions
+
+local DoorsCaptions
+
+pcall(function()
+    local source = game:HttpGet(
+        "https://raw.githubusercontent.com/RegularVynixu/DOORS-Captions/main/init.luau"
+    )
+
+    local loader = loadstring(source)
+
+    if loader then
+        DoorsCaptions = loader()
+    end
+end)
+
+local function caption(text, captionType, duration)
+    if DoorsCaptions and type(DoorsCaptions.caption) == "function" then
+        pcall(function()
+            DoorsCaptions.caption(
+                text,
+                captionType or "info",
+                duration or 5
+            )
+        end)
+    end
+end
+
+-- Achievement
+
+local AchievementGiver
+
+pcall(function()
+    local source = game:HttpGet(
+        "https://raw.githubusercontent.com/ala22221/Backups-of-some-stuff/refs/heads/main/Fixed%20Achievements%20by%20DripCapybara.lua"
+    )
+
+    local loader = loadstring(source)
+
+    if loader then
+        local result = loader()
+
+        if type(result) == "function" then
+            AchievementGiver = result
+        end
+    end
+end)
+
+local function waitForAchievementUI()
+    local playerGui = Plr:WaitForChild("PlayerGui", 15)
+
+    if not playerGui then
+        return false
+    end
+
+    local globalUI = playerGui:WaitForChild("GlobalUI", 15)
+
+    if not globalUI then
+        return false
+    end
+
+    local achievementsHolder = globalUI:WaitForChild(
+        "AchievementsHolder",
+        15
+    )
+
+    if not achievementsHolder then
+        return false
+    end
+
+    local achievement = achievementsHolder:WaitForChild(
+        "Achievement",
+        15
+    )
+
+    return achievement ~= nil
+end
+
+local givenAchievements = {}
+
+local function giveAchievement(id, data)
+    if givenAchievements[id] then
+        return
+    end
+
+    if not AchievementGiver then
+        warn("Achievement giver failed to load.")
+        return
+    end
+
+    if not waitForAchievementUI() then
+        warn("Achievement UI was not found.")
+        return
+    end
+
+    givenAchievements[id] = true
+
+    task.spawn(function()
+        pcall(function()
+            AchievementGiver(data)
+        end)
+    end)
+end
+
+-- Welcome Achievement
+-- This happens every time the script is executed.
+
+task.spawn(function()
+    task.wait(3)
+
+    giveAchievement(
+        "Welcome",
+        {
+            Title = "Welcome",
+            Desc = "Welcome to Easy'nt Mode",
+            Reason = "...",
+            Image = "rbxassetid://80921932542636"
+        }
+    )
+end)
+
+-- Loaded Messages
+
+caption(
+    "Easy'nt Mode loaded successfully.",
+    "info",
+    5
+)
+
+caption(
+    "Made by someguy111131, DripCapybara for the fixed stuff",
+    "info",
+    5
+)
+
+caption(
+    "Good Luck.",
+    "info",
+    5
+)
+
+-- Spawner
+
+local SpawnerURL =
+    "https://raw.githubusercontent.com/ala22221/Backups-of-some-stuff/refs/heads/main/Fixed%20Spawner%20by%20DripCapybara.lua"
+
+local SpawnerSource = game:HttpGet(SpawnerURL)
+
+-- Fix broken Death UI reference if an older source is loaded
+
+SpawnerSource = SpawnerSource:gsub(
+    'if CG:FindFirstChild%("JumpscareGui"%)%s*or%s*%(%s*Plr%.PlayerGui%.MainUI%.Death%.HelpfulDialogue%.Visible%s*and%s*not%s*Plr%.PlayerGui%.MainUI%.DeathPanelDead%.Visible%s*%) then',
+    'if CG:FindFirstChild("JumpscareGui") then'
+)
+
+SpawnerSource = SpawnerSource:gsub(
+    'Plr%.PlayerGui%.MainUI%.Death%.HelpfulDialogue%.Visible',
+    'false'
+)
+
+local SpawnerLoader, SpawnerError = loadstring(SpawnerSource)
+
+if not SpawnerLoader then
+    error("Spawner compile error: " .. tostring(SpawnerError))
+end
+
+local Spawner = SpawnerLoader()
+
+if type(Spawner) ~= "table" then
+    error("Spawner failed to load.")
+end
+
+if type(Spawner.createEntity) ~= "function" then
+    error("Spawner.createEntity is missing.")
+end
+
+if type(Spawner.runEntity) ~= "function" then
+    error("Spawner.runEntity is missing.")
+end
+
+-- Spawn Deer God
+
+local function spawnDeerGod()
+    local entityTable
+
+    local success, result = pcall(function()
+        return Spawner.createEntity({
+            CustomName = "Deer God",
+            Model = "rbxassetid://12262883448",
+            Speed = 25,
+            DelayTime = 4,
+            HeightOffset = 0,
+            CanKill = true,
+            KillRange = 50,
+            BackwardsMovement = false,
+            BreakLights = true,
+
+            FlickerLights = {
+                true,
+                1
+            },
+
+            Cycles = {
+                Min = 0,
+                Max = 0,
+                WaitTime = 2
+            },
+
+            CamShake = {
+                false,
+                {3.5, 20, 0.1, 1},
+                100
+            },
+
+            Jumpscare = {
+                true,
+                {
+                    Image1 = "rbxassetid://0",
+                    Image2 = "rbxassetid://0",
+
+                    Shake = true,
+
+                    Sound1 = {
+                        10483790459,
+                        {
+                            Volume = 0.5
+                        }
+                    },
+
+                    Sound2 = {
+                        116282238939992,
+                        {
+                            Volume = 0.5
+                        }
+                    },
+
+                    Flashing = {
+                        true,
+                        Color3.fromRGB(
+                            255,
+                            255,
+                            255
+                        )
+                    },
+
+                    Tease = {
+                        false,
+                        Min = 1,
+                        Max = 3
+                    }
+                }
+            },
+
+            CustomDialog = {
+                "You can",
+                "put your",
+                "custom death",
+                "message here."
+            }
+        })
+    end)
+
+    if not success then
+        warn(
+            "Deer God createEntity error:",
+            result
+        )
+        return
+    end
+
+    entityTable = result
+
+    if not entityTable then
+        warn(
+            "Failed to create Deer God entity."
+        )
+        return
+    end
+
+    if entityTable.Debug then
+
+        -- Deer God achievement happens AFTER despawn.
+
+        entityTable.Debug.OnEntitySpawned = function()
+        end
+
+        entityTable.Debug.OnEntityDespawned = function()
+            giveAchievement(
+                "DeerGod",
+                {
+                    Title = "Why are you running?",
+                    Desc = "Encounter the Deer God",
+                    Reason = "...",
+                    Image = "rbxassetid://80921932542636"
+                }
+            )
+        end
+
+        entityTable.Debug.OnEntityStartMoving = function()
+        end
+
+        entityTable.Debug.OnEntityFinishedRebound = function()
+        end
+
+        entityTable.Debug.OnEntityEnteredRoom = function()
+        end
+
+        entityTable.Debug.OnLookAtEntity = function()
+        end
+
+        entityTable.Debug.OnDeath = function()
+        end
+    end
+
+    task.spawn(function()
+        local runSuccess, runError = pcall(function()
+            Spawner.runEntity(entityTable)
+        end)
+
+        if not runSuccess then
+            warn(
+                "Deer God runEntity error:",
+                runError
+            )
+        end
+    end)
+end
+
+-- Spawn Depth
+
+local function spawnDepth()
+    local entityTable
+
+    local success, result = pcall(function()
+        return Spawner.createEntity({
+            CustomName = "Depth",
+            Model = "rbxassetid://11535848347",
+            Speed = 150,
+            DelayTime = 4,
+            HeightOffset = 0,
+            CanKill = true,
+            KillRange = 50,
+            BackwardsMovement = false,
+            BreakLights = true,
+
+            FlickerLights = {
+                true,
+                1
+            },
+
+            Cycles = {
+                Min = 1,
+                Max = 4,
+                WaitTime = 2
+            },
+
+            CamShake = {
+                false,
+                {3.5, 20, 0.1, 1},
+                100
+            },
+
+            Jumpscare = {
+                true,
+                {
+                    Image1 = "rbxassetid://11487294392",
+                    Image2 = "rbxassetid://123822082171984",
+
+                    Shake = true,
+
+                    Sound1 = {
+                        101127627832457,
+                        {
+                            Volume = 0.5
+                        }
+                    },
+
+                    Sound2 = {
+                        80686090832850,
+                        {
+                            Volume = 0.5
+                        }
+                    },
+
+                    Flashing = {
+                        true,
+                        Color3.fromRGB(
+                            0,
+                            0,
+                            255
+                        )
+                    },
+
+                    Tease = {
+                        true,
+                        Min = 1,
+                        Max = 2
+                    }
+                }
+            },
+
+            CustomDialog = {
+                "You can",
+                "put your",
+                "custom death",
+                "message here."
+            }
+        })
+    end)
+
+    if not success then
+        warn(
+            "Depth createEntity error:",
+            result
+        )
+        return
+    end
+
+    entityTable = result
+
+    if not entityTable then
+        warn(
+            "Failed to create Depth entity."
+        )
+        return
+    end
+
+    if entityTable.Debug then
+
+        entityTable.Debug.OnEntitySpawned = function()
+        end
+
+        entityTable.Debug.OnEntityDespawned = function()
+
+            local character = Plr.Character
+
+            if not character then
+                return
+            end
+
+            if character:GetAttribute("IsDead") then
+                return
+            end
+
+            local humanoid =
+                character:FindFirstChildOfClass("Humanoid")
+
+            if not humanoid then
+                return
+            end
+
+            if humanoid.Health <= 0 then
+                return
+            end
+
+            giveAchievement(
+                "Depth",
+                {
+                    Title = "Deep",
+                    Desc = "Survive Depth",
+                    Reason = "...",
+                    Image = "rbxassetid://80921932542636"
+                }
+            )
+        end
+
+        entityTable.Debug.OnEntityStartMoving = function()
+        end
+
+        entityTable.Debug.OnEntityFinishedRebound = function()
+        end
+
+        entityTable.Debug.OnEntityEnteredRoom = function()
+        end
+
+        entityTable.Debug.OnLookAtEntity = function()
+        end
+
+        entityTable.Debug.OnDeath = function()
+        end
+    end
+
+    task.spawn(function()
+        local runSuccess, runError = pcall(function()
+            Spawner.runEntity(entityTable)
+        end)
+
+        if not runSuccess then
+            warn(
+                "Depth runEntity error:",
+                runError
+            )
+        end
+    end)
+end
+
+-- Automatic Spawning
+
+task.spawn(function()
+    while true do
+        task.wait(60)
+        spawnDepth()
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(180)
+        spawnDeerGod()
+    end
+end)
+
+-- Admin Commands
+
+local lastCommand = ""
+local lastCommandTime = 0
+
+local function handleCommand(message)
+
+    if not IsAdmin then
+        return
+    end
+
+    message = tostring(message):lower()
+
+    message = message:match("^%s*(.-)%s*$")
+
+    local now = os.clock()
+
+    if message == lastCommand
+        and now - lastCommandTime < 0.25 then
+        return
+    end
+
+    lastCommand = message
+    lastCommandTime = now
+
+    if message == "/depth" then
+        spawnDepth()
+
+    elseif message == "/deergod" then
+        spawnDeerGod()
+    end
+end
+
+-- TextChatService
+
+pcall(function()
+    TextChatService.MessageReceived:Connect(
+        function(message)
+
+            if not message.TextSource then
+                return
+            end
+
+            if message.TextSource.UserId
+                ~= Plr.UserId then
+                return
+            end
+
+            handleCommand(message.Text)
+        end
+    )
+end)
+
+-- Legacy Chat
+
+pcall(function()
+    Plr.Chatted:Connect(function(message)
+        handleCommand(message)
+    end)
+end)
