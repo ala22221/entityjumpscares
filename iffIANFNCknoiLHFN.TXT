@@ -1045,7 +1045,7 @@ local function spawnRebound()
 
                     loadstring(
                         game:HttpGet(
-                            "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscare.lua"
+                            "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscareNEW.lua"
                         )
                     )()
 
