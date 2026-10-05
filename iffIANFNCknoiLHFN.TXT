@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- =========================================================
 -- Variables
@@ -34,15 +35,19 @@ end
 local IsAdmin = isAdmin(Plr.Name)
 
 -- =========================================================
+-- Spawn Chances
+-- =========================================================
+
+local A60SpawnChance = 35
+local GreedSpawnChance = 40
+
+-- =========================================================
 -- SeekMoving / Figure
 -- =========================================================
 
 local function makeFigureVisible(figure)
 
-    -- Handle Figure itself
-
     if figure:IsA("BasePart") then
-
         figure.Transparency = 0
 
     elseif figure:IsA("Decal")
@@ -51,17 +56,12 @@ local function makeFigureVisible(figure)
         figure.Transparency = 0
 
     elseif figure:IsA("ParticleEmitter") then
-
         figure.Enabled = true
-
     end
-
-    -- Handle everything inside Figure
 
     for _, obj in ipairs(figure:GetDescendants()) do
 
         if obj:IsA("BasePart") then
-
             obj.Transparency = 0
 
         elseif obj:IsA("Decal")
@@ -70,9 +70,7 @@ local function makeFigureVisible(figure)
             obj.Transparency = 0
 
         elseif obj:IsA("ParticleEmitter") then
-
             obj.Enabled = true
-
         end
 
     end
@@ -83,8 +81,6 @@ local function setupSeekMoving(model)
     if not model:IsA("Model") then
         return
     end
-
-    -- Hide everything inside SeekMoving
 
     for _, obj in ipairs(model:GetDescendants()) do
 
@@ -102,8 +98,6 @@ local function setupSeekMoving(model)
 
     end
 
-    -- Find Figure recursively
-
     local figure =
         model:FindFirstChild("Figure", true)
 
@@ -111,11 +105,7 @@ local function setupSeekMoving(model)
         return
     end
 
-    -- Make Figure visible
-
     makeFigureVisible(figure)
-
-    -- Handle children added later
 
     figure.DescendantAdded:Connect(function(obj)
 
@@ -134,24 +124,18 @@ local function setupSeekMoving(model)
     end)
 end
 
--- Handle SeekMoving models that already exist
-
 for _, obj in ipairs(Workspace:GetDescendants()) do
 
     if obj:IsA("Model")
         and obj.Name == "SeekMoving" then
 
         task.spawn(function()
-
             setupSeekMoving(obj)
-
         end)
 
     end
 
 end
-
--- Handle newly spawned SeekMoving models
 
 Workspace.DescendantAdded:Connect(function(obj)
 
@@ -274,20 +258,10 @@ local function giveAchievement(id, data)
     end
 
     if not AchievementGiver then
-
-        warn(
-            "Achievement giver failed to load."
-        )
-
         return
     end
 
     if not waitForAchievementUI() then
-
-        warn(
-            "Achievement UI was not found."
-        )
-
         return
     end
 
@@ -296,9 +270,7 @@ local function giveAchievement(id, data)
     task.spawn(function()
 
         pcall(function()
-
             AchievementGiver(data)
-
         end)
 
     end)
@@ -316,7 +288,7 @@ task.spawn(function()
         "Welcome",
         {
             Title = "Welcome",
-            Desc = "Welcome to Easy'nt Mode",
+            Desc = "This hotel seems old..",
             Reason = "...",
             Image = "rbxassetid://80921932542636"
         }
@@ -356,7 +328,7 @@ local SpawnerURL =
 local SpawnerSource =
     game:HttpGet(SpawnerURL)
 
--- Fix broken Death UI reference if an older source is loaded
+-- Fix broken Death UI reference
 
 SpawnerSource = SpawnerSource:gsub(
     'if CG:FindFirstChild%("JumpscareGui"%)%s*or%s*%(%s*Plr%.PlayerGui%.MainUI%.Death%.HelpfulDialogue%.Visible%s*and%s*not%s*Plr%.PlayerGui%.MainUI%.DeathPanelDead%.Visible%s*%) then',
@@ -400,9 +372,7 @@ end
 
 local function spawnDeerGod()
 
-    local entityTable
-
-    local success, result =
+    local success, entityTable =
         pcall(function()
 
             return Spawner.createEntity({
@@ -458,45 +428,32 @@ local function spawnDeerGod()
                         Shake = true,
 
                         Sound1 = {
-
                             10483790459,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Sound2 = {
-
                             116282238939992,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Flashing = {
-
                             true,
-
                             Color3.fromRGB(
                                 255,
                                 255,
                                 255
                             )
-
                         },
 
                         Tease = {
-
                             false,
-
                             Min = 1,
-
                             Max = 3
-
                         }
 
                     }
@@ -504,45 +461,21 @@ local function spawnDeerGod()
                 },
 
                 CustomDialog = {
-
                     "You can",
-
                     "put your",
-
                     "custom death",
-
                     "message here."
-
                 }
 
             })
 
         end)
 
-    if not success then
-
-        warn(
-            "Deer God createEntity error:",
-            result
-        )
-
-        return
-    end
-
-    entityTable = result
-
-    if not entityTable then
-
-        warn(
-            "Failed to create Deer God entity."
-        )
-
+    if not success or not entityTable then
         return
     end
 
     if entityTable.Debug then
-
-        -- Achievement AFTER despawn
 
         entityTable.Debug.OnEntitySpawned =
             function()
@@ -593,23 +526,11 @@ local function spawnDeerGod()
 
     task.spawn(function()
 
-        local runSuccess, runError =
-            pcall(function()
+        pcall(function()
 
-                Spawner.runEntity(
-                    entityTable
-                )
+            Spawner.runEntity(entityTable)
 
-            end)
-
-        if not runSuccess then
-
-            warn(
-                "Deer God runEntity error:",
-                runError
-            )
-
-        end
+        end)
 
     end)
 
@@ -621,9 +542,7 @@ end
 
 local function spawnDepth()
 
-    local entityTable
-
-    local success, result =
+    local success, entityTable =
         pcall(function()
 
             return Spawner.createEntity({
@@ -679,45 +598,32 @@ local function spawnDepth()
                         Shake = true,
 
                         Sound1 = {
-
                             101127627832457,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Sound2 = {
-
                             80686090832850,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Flashing = {
-
                             true,
-
                             Color3.fromRGB(
                                 0,
                                 0,
                                 255
                             )
-
                         },
 
                         Tease = {
-
                             true,
-
                             Min = 1,
-
                             Max = 2
-
                         }
 
                     }
@@ -725,39 +631,17 @@ local function spawnDepth()
                 },
 
                 CustomDialog = {
-
                     "You can",
-
                     "put your",
-
                     "custom death",
-
                     "message here."
-
                 }
 
             })
 
         end)
 
-    if not success then
-
-        warn(
-            "Depth createEntity error:",
-            result
-        )
-
-        return
-    end
-
-    entityTable = result
-
-    if not entityTable then
-
-        warn(
-            "Failed to create Depth entity."
-        )
-
+    if not success or not entityTable then
         return
     end
 
@@ -777,12 +661,8 @@ local function spawnDepth()
                     return
                 end
 
-                if character:GetAttribute(
-                    "IsDead"
-                ) then
-
+                if character:GetAttribute("IsDead") then
                     return
-
                 end
 
                 local humanoid =
@@ -839,23 +719,11 @@ local function spawnDepth()
 
     task.spawn(function()
 
-        local runSuccess, runError =
-            pcall(function()
+        pcall(function()
 
-                Spawner.runEntity(
-                    entityTable
-                )
+            Spawner.runEntity(entityTable)
 
-            end)
-
-        if not runSuccess then
-
-            warn(
-                "Depth runEntity error:",
-                runError
-            )
-
-        end
+        end)
 
     end)
 
@@ -867,9 +735,7 @@ end
 
 local function spawnRebound()
 
-    local entityTable
-
-    local success, result =
+    local success, entityTable =
         pcall(function()
 
             return Spawner.createEntity({
@@ -910,9 +776,6 @@ local function spawnRebound()
                     100
                 },
 
-                -- Built-in jumpscare disabled
-                -- because reboundscare.lua handles it.
-
                 Jumpscare = {
 
                     false,
@@ -928,45 +791,32 @@ local function spawnRebound()
                         Shake = true,
 
                         Sound1 = {
-
                             10483790459,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Sound2 = {
-
                             10483837590,
-
                             {
                                 Volume = 0.5
                             }
-
                         },
 
                         Flashing = {
-
                             true,
-
                             Color3.fromRGB(
                                 255,
                                 255,
                                 255
                             )
-
                         },
 
                         Tease = {
-
                             true,
-
                             Min = 1,
-
                             Max = 3
-
                         }
 
                     }
@@ -974,39 +824,17 @@ local function spawnRebound()
                 },
 
                 CustomDialog = {
-
                     "You can",
-
                     "put your",
-
                     "custom death",
-
                     "message here."
-
                 }
 
             })
 
         end)
 
-    if not success then
-
-        warn(
-            "Rebound createEntity error:",
-            result
-        )
-
-        return
-    end
-
-    entityTable = result
-
-    if not entityTable then
-
-        warn(
-            "Failed to create Rebound entity."
-        )
-
+    if not success or not entityTable then
         return
     end
 
@@ -1036,8 +864,6 @@ local function spawnRebound()
             function()
             end
 
-        -- Custom Rebound jumpscare
-
         entityTable.Debug.OnDeath =
             function()
 
@@ -1057,23 +883,317 @@ local function spawnRebound()
 
     task.spawn(function()
 
-        local runSuccess, runError =
-            pcall(function()
+        pcall(function()
 
-                Spawner.runEntity(
-                    entityTable
-                )
+            Spawner.runEntity(entityTable)
 
-            end)
+        end)
 
-        if not runSuccess then
+    end)
 
-            warn(
-                "Rebound runEntity error:",
-                runError
-            )
+end
 
-        end
+-- =========================================================
+-- Spawn A-60
+-- =========================================================
+
+local function spawnA60()
+
+    local success, entityTable =
+        pcall(function()
+
+            return Spawner.createEntity({
+
+                CustomName = "A-60",
+
+                Model =
+                    "rbxassetid://93183888655290",
+
+                Speed = 450,
+
+                DelayTime = 10,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = false,
+
+                BreakLights = true,
+
+                FlickerLights = {
+                    true,
+                    1
+                },
+
+                Cycles = {
+                    Min = 1,
+                    Max = 4,
+                    WaitTime = 0
+                },
+
+                CamShake = {
+                    true,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://11914051787",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            97122574985171,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                170,
+                                0,
+                                0
+                            )
+                        },
+
+                        Tease = {
+                            false,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
+                }
+
+            })
+
+        end)
+
+    if not success or not entityTable then
+        return
+    end
+
+    if entityTable.Debug then
+
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityDespawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
+end
+
+-- =========================================================
+-- Spawn Greed
+-- =========================================================
+
+local function spawnGreed()
+
+    local success, entityTable =
+        pcall(function()
+
+            return Spawner.createEntity({
+
+                CustomName = "Greed",
+
+                Model =
+                    "rbxassetid://128332367846866",
+
+                Speed = 0,
+
+                DelayTime = 10,
+
+                HeightOffset = 0,
+
+                CanKill = false,
+
+                KillRange = 50,
+
+                BackwardsMovement = true,
+
+                BreakLights = true,
+
+                FlickerLights = {
+                    true,
+                    1
+                },
+
+                Cycles = {
+                    Min = 1,
+                    Max = 4,
+                    WaitTime = 0
+                },
+
+                CamShake = {
+                    true,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://11914051787",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            97122574985171,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                170,
+                                0,
+                                0
+                            )
+                        },
+
+                        Tease = {
+                            false,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
+                }
+
+            })
+
+        end)
+
+    if not success or not entityTable then
+        return
+    end
+
+    if entityTable.Debug then
+
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityDespawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
 
     end)
 
@@ -1083,7 +1203,7 @@ end
 -- Automatic Spawning
 -- =========================================================
 
--- Depth: every 60 seconds
+-- Depth every 60 seconds
 
 task.spawn(function()
 
@@ -1097,7 +1217,7 @@ task.spawn(function()
 
 end)
 
--- Rebound: every 120 seconds
+-- Rebound every 120 seconds
 
 task.spawn(function()
 
@@ -1111,7 +1231,7 @@ task.spawn(function()
 
 end)
 
--- Deer God: every 180 seconds
+-- Deer God every 180 seconds
 
 task.spawn(function()
 
@@ -1124,6 +1244,100 @@ task.spawn(function()
     end
 
 end)
+
+-- =========================================================
+-- A-60 Random Chance
+-- =========================================================
+
+task.spawn(function()
+
+    while true do
+
+        task.wait(60)
+
+        if math.random(1, 100)
+            <= A60SpawnChance then
+
+            spawnA60()
+
+        end
+
+    end
+
+end)
+
+-- =========================================================
+-- Greed Random Chance Per Door
+-- =========================================================
+
+local GameData =
+    ReplicatedStorage:WaitForChild("GameData")
+
+local LatestRoom =
+    GameData:WaitForChild("LatestRoom")
+
+local lastRoom =
+    LatestRoom.Value
+
+LatestRoom:GetPropertyChangedSignal("Value"):Connect(
+    function()
+
+        local newRoom =
+            LatestRoom.Value
+
+        if newRoom == lastRoom then
+            return
+        end
+
+        lastRoom = newRoom
+
+        -- Get the new room
+
+        local room =
+            Workspace.CurrentRooms:FindFirstChild(
+                tostring(newRoom)
+            )
+
+        if not room then
+
+            -- Wait in case CurrentRooms
+            -- hasn't created it yet.
+
+            task.spawn(function()
+
+                local newRoomObject =
+                    Workspace.CurrentRooms:WaitForChild(
+                        tostring(newRoom),
+                        5
+                    )
+
+                if not newRoomObject then
+                    return
+                end
+
+                if math.random(1, 100)
+                    <= GreedSpawnChance then
+
+                    spawnGreed()
+
+                end
+
+            end)
+
+            return
+        end
+
+        task.wait(0.1)
+
+        if math.random(1, 100)
+            <= GreedSpawnChance then
+
+            spawnGreed()
+
+        end
+
+    end
+)
 
 -- =========================================================
 -- Admin Commands
@@ -1167,6 +1381,14 @@ local function handleCommand(message)
 
         spawnDeerGod()
 
+    elseif message == "/a60" then
+
+        spawnA60()
+
+    elseif message == "/greed" then
+
+        spawnGreed()
+
     end
 
 end
@@ -1188,7 +1410,6 @@ pcall(function()
                 ~= Plr.UserId then
 
                 return
-
             end
 
             handleCommand(
