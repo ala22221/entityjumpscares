@@ -1,10 +1,14 @@
+-- =========================================================
 -- Services
+-- =========================================================
 
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local Workspace = game:GetService("Workspace")
 
+-- =========================================================
 -- Variables
+-- =========================================================
 
 local Plr = Players.LocalPlayer
 
@@ -13,12 +17,15 @@ local admeen = {
 }
 
 local function isAdmin(name)
+
     name = string.lower(tostring(name))
 
     for _, adminName in ipairs(admeen) do
+
         if string.lower(adminName) == name then
             return true
         end
+
     end
 
     return false
@@ -31,38 +38,54 @@ local IsAdmin = isAdmin(Plr.Name)
 -- =========================================================
 
 local function makeFigureVisible(figure)
+
     -- Handle Figure itself
+
     if figure:IsA("BasePart") then
+
         figure.Transparency = 0
 
-    elseif figure:IsA("Decal") or figure:IsA("Texture") then
+    elseif figure:IsA("Decal")
+        or figure:IsA("Texture") then
+
         figure.Transparency = 0
 
     elseif figure:IsA("ParticleEmitter") then
+
         figure.Enabled = true
+
     end
 
     -- Handle everything inside Figure
+
     for _, obj in ipairs(figure:GetDescendants()) do
 
         if obj:IsA("BasePart") then
+
             obj.Transparency = 0
 
-        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+        elseif obj:IsA("Decal")
+            or obj:IsA("Texture") then
+
             obj.Transparency = 0
 
         elseif obj:IsA("ParticleEmitter") then
+
             obj.Enabled = true
+
         end
+
     end
 end
 
 local function setupSeekMoving(model)
+
     if not model:IsA("Model") then
         return
     end
 
     -- Hide everything inside SeekMoving
+
     for _, obj in ipairs(model:GetDescendants()) do
 
         if obj:IsA("BasePart")
@@ -74,20 +97,26 @@ local function setupSeekMoving(model)
         elseif obj:IsA("ParticleEmitter") then
 
             obj.Enabled = false
+
         end
+
     end
 
     -- Find Figure recursively
-    local figure = model:FindFirstChild("Figure", true)
+
+    local figure =
+        model:FindFirstChild("Figure", true)
 
     if not figure then
         return
     end
 
     -- Make Figure visible
+
     makeFigureVisible(figure)
 
-    -- Handle children that get added later
+    -- Handle children added later
+
     figure.DescendantAdded:Connect(function(obj)
 
         if obj:IsA("BasePart")
@@ -99,27 +128,35 @@ local function setupSeekMoving(model)
         elseif obj:IsA("ParticleEmitter") then
 
             obj.Enabled = true
+
         end
 
     end)
 end
 
 -- Handle SeekMoving models that already exist
+
 for _, obj in ipairs(Workspace:GetDescendants()) do
 
-    if obj:IsA("Model") and obj.Name == "SeekMoving" then
+    if obj:IsA("Model")
+        and obj.Name == "SeekMoving" then
 
         task.spawn(function()
+
             setupSeekMoving(obj)
+
         end)
 
     end
+
 end
 
 -- Handle newly spawned SeekMoving models
+
 Workspace.DescendantAdded:Connect(function(obj)
 
-    if obj:IsA("Model") and obj.Name == "SeekMoving" then
+    if obj:IsA("Model")
+        and obj.Name == "SeekMoving" then
 
         task.wait()
 
@@ -259,7 +296,9 @@ local function giveAchievement(id, data)
     task.spawn(function()
 
         pcall(function()
+
             AchievementGiver(data)
+
         end)
 
     end)
@@ -425,6 +464,7 @@ local function spawnDeerGod()
                             {
                                 Volume = 0.5
                             }
+
                         },
 
                         Sound2 = {
@@ -434,6 +474,7 @@ local function spawnDeerGod()
                             {
                                 Volume = 0.5
                             }
+
                         },
 
                         Flashing = {
@@ -445,6 +486,7 @@ local function spawnDeerGod()
                                 255,
                                 255
                             )
+
                         },
 
                         Tease = {
@@ -454,8 +496,11 @@ local function spawnDeerGod()
                             Min = 1,
 
                             Max = 3
+
                         }
+
                     }
+
                 },
 
                 CustomDialog = {
@@ -467,7 +512,9 @@ local function spawnDeerGod()
                     "custom death",
 
                     "message here."
+
                 }
+
             })
 
         end)
@@ -494,6 +541,8 @@ local function spawnDeerGod()
     end
 
     if entityTable.Debug then
+
+        -- Achievement AFTER despawn
 
         entityTable.Debug.OnEntitySpawned =
             function()
@@ -539,6 +588,7 @@ local function spawnDeerGod()
         entityTable.Debug.OnDeath =
             function()
             end
+
     end
 
     task.spawn(function()
@@ -562,6 +612,7 @@ local function spawnDeerGod()
         end
 
     end)
+
 end
 
 -- =========================================================
@@ -634,6 +685,7 @@ local function spawnDepth()
                             {
                                 Volume = 0.5
                             }
+
                         },
 
                         Sound2 = {
@@ -643,6 +695,7 @@ local function spawnDepth()
                             {
                                 Volume = 0.5
                             }
+
                         },
 
                         Flashing = {
@@ -654,6 +707,7 @@ local function spawnDepth()
                                 0,
                                 255
                             )
+
                         },
 
                         Tease = {
@@ -663,8 +717,11 @@ local function spawnDepth()
                             Min = 1,
 
                             Max = 2
+
                         }
+
                     }
+
                 },
 
                 CustomDialog = {
@@ -676,7 +733,9 @@ local function spawnDepth()
                     "custom death",
 
                     "message here."
+
                 }
+
             })
 
         end)
@@ -723,6 +782,7 @@ local function spawnDepth()
                 ) then
 
                     return
+
                 end
 
                 local humanoid =
@@ -774,6 +834,7 @@ local function spawnDepth()
         entityTable.Debug.OnDeath =
             function()
             end
+
     end
 
     task.spawn(function()
@@ -797,11 +858,232 @@ local function spawnDepth()
         end
 
     end)
+
+end
+
+-- =========================================================
+-- Spawn Rebound
+-- =========================================================
+
+local function spawnRebound()
+
+    local entityTable
+
+    local success, result =
+        pcall(function()
+
+            return Spawner.createEntity({
+
+                CustomName = "Rebound",
+
+                Model =
+                    "rbxassetid://82116817846987",
+
+                Speed = 350,
+
+                DelayTime = 2,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = true,
+
+                BreakLights = true,
+
+                FlickerLights = {
+                    true,
+                    1
+                },
+
+                Cycles = {
+                    Min = 15,
+                    Max = 15,
+                    WaitTime = 2
+                },
+
+                CamShake = {
+                    false,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                -- Built-in jumpscare disabled
+                -- because reboundscare.lua handles it.
+
+                Jumpscare = {
+
+                    false,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://10483999903",
+
+                        Shake = true,
+
+                        Sound1 = {
+
+                            10483790459,
+
+                            {
+                                Volume = 0.5
+                            }
+
+                        },
+
+                        Sound2 = {
+
+                            10483837590,
+
+                            {
+                                Volume = 0.5
+                            }
+
+                        },
+
+                        Flashing = {
+
+                            true,
+
+                            Color3.fromRGB(
+                                255,
+                                255,
+                                255
+                            )
+
+                        },
+
+                        Tease = {
+
+                            true,
+
+                            Min = 1,
+
+                            Max = 3
+
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+
+                    "You can",
+
+                    "put your",
+
+                    "custom death",
+
+                    "message here."
+
+                }
+
+            })
+
+        end)
+
+    if not success then
+
+        warn(
+            "Rebound createEntity error:",
+            result
+        )
+
+        return
+    end
+
+    entityTable = result
+
+    if not entityTable then
+
+        warn(
+            "Failed to create Rebound entity."
+        )
+
+        return
+    end
+
+    if entityTable.Debug then
+
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityDespawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        -- Custom Rebound jumpscare
+
+        entityTable.Debug.OnDeath =
+            function()
+
+                pcall(function()
+
+                    loadstring(
+                        game:HttpGet(
+                            "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscare.lua"
+                        )
+                    )()
+
+                end)
+
+            end
+
+    end
+
+    task.spawn(function()
+
+        local runSuccess, runError =
+            pcall(function()
+
+                Spawner.runEntity(
+                    entityTable
+                )
+
+            end)
+
+        if not runSuccess then
+
+            warn(
+                "Rebound runEntity error:",
+                runError
+            )
+
+        end
+
+    end)
+
 end
 
 -- =========================================================
 -- Automatic Spawning
 -- =========================================================
+
+-- Depth: every 60 seconds
 
 task.spawn(function()
 
@@ -815,11 +1097,27 @@ task.spawn(function()
 
 end)
 
+-- Rebound: every 120 seconds
+
 task.spawn(function()
 
     while true do
 
         task.wait(120)
+
+        spawnRebound()
+
+    end
+
+end)
+
+-- Deer God: every 180 seconds
+
+task.spawn(function()
+
+    while true do
+
+        task.wait(180)
 
         spawnDeerGod()
 
@@ -861,11 +1159,16 @@ local function handleCommand(message)
 
         spawnDepth()
 
+    elseif message == "/rebound" then
+
+        spawnRebound()
+
     elseif message == "/deergod" then
 
         spawnDeerGod()
 
     end
+
 end
 
 -- =========================================================
@@ -885,6 +1188,7 @@ pcall(function()
                 ~= Plr.UserId then
 
                 return
+
             end
 
             handleCommand(
