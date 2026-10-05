@@ -1,5 +1,5 @@
 local REBOUND_IMAGE = "rbxassetid://95524729864776"
-local REBOUND_SOUND = "rbxassetid://92911265618024"
+local REBOUND_SOUND = "rbxassetid://78642329779681"
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
