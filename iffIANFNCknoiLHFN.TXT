@@ -877,7 +877,7 @@ local function spawnRebound()
                 CustomName = "Rebound",
 
                 Model =
-                    "rbxassetid://82116817846987",
+                    "rbxassetid://109731682196761",
 
                 Speed = 350,
 
