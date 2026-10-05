@@ -39,7 +39,10 @@ local IsAdmin = isAdmin(Plr.Name)
 -- =========================================================
 
 local A60SpawnChance = 35
-local GreedSpawnChance = 35
+local GreedSpawnChance = 20
+
+-- Greed gets a chance every X doors
+local GreedEveryDoors = 5
 
 -- =========================================================
 -- SeekMoving / Figure
@@ -1267,7 +1270,7 @@ task.spawn(function()
 end)
 
 -- =========================================================
--- Greed Random Chance Per Door
+-- Greed Random Chance Every 5 Doors
 -- =========================================================
 
 local GameData =
@@ -1278,6 +1281,8 @@ local LatestRoom =
 
 local lastRoom =
     LatestRoom.Value
+
+local greedDoorCounter = 0
 
 LatestRoom:GetPropertyChangedSignal("Value"):Connect(
     function()
@@ -1291,6 +1296,21 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(
 
         lastRoom = newRoom
 
+        -- Count this newly opened door
+
+        greedDoorCounter =
+            greedDoorCounter + 1
+
+        -- Only check every 5 doors
+
+        if greedDoorCounter < GreedEveryDoors then
+            return
+        end
+
+        -- Reset the counter
+
+        greedDoorCounter = 0
+
         -- Get the new room
 
         local room =
@@ -1299,9 +1319,6 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(
             )
 
         if not room then
-
-            -- Wait in case CurrentRooms
-            -- hasn't created it yet.
 
             task.spawn(function()
 
@@ -1328,6 +1345,8 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(
         end
 
         task.wait(0.1)
+
+        -- 35% chance to spawn Greed
 
         if math.random(1, 100)
             <= GreedSpawnChance then
