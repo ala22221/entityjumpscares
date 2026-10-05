@@ -39,7 +39,7 @@ local IsAdmin = isAdmin(Plr.Name)
 -- =========================================================
 
 local A60SpawnChance = 35
-local GreedSpawnChance = 40
+local GreedSpawnChance = 35
 
 -- =========================================================
 -- SeekMoving / Figure
