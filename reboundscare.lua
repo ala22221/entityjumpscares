@@ -5,7 +5,32 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local REBOUND_IMAGE = "rbxassetid://94841181437395"
-local REBOUND_SOUND = "rbxassetid://88369282881781"
+
+-- GitHub raw sound
+local SOUND_URL = "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscare.ogg"
+local SOUND_FILE = "reboundscare.ogg"
+
+local getAsset = getcustomasset or getsynasset
+
+if not getAsset or not isfile or not writefile then
+    warn("Your executor does not support custom GitHub assets.")
+    return
+end
+
+if not isfile(SOUND_FILE) then
+    local success, data = pcall(function()
+        return game:HttpGet(SOUND_URL)
+    end)
+
+    if not success then
+        warn("Failed to download Rebound sound.")
+        return
+    end
+
+    writefile(SOUND_FILE, data)
+end
+
+local REBOUND_SOUND = getAsset(SOUND_FILE)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "ReboundJumpscare"
@@ -61,58 +86,57 @@ distortion.Parent = scream
 
 local function reboundJumpscare()
 
-	bg.BackgroundTransparency = 1
-	bg.BackgroundColor3 = Color3.fromRGB(2, 25, 99)
+    bg.BackgroundTransparency = 1
+    bg.BackgroundColor3 = Color3.fromRGB(2, 25, 99)
 
-	rebound.Visible = true
+    rebound.Visible = true
 
+    rebound.Size = UDim2.fromScale(0.25, 0.25)
+    rebound.Position = UDim2.fromScale(0.375, 0.375)
 
-	rebound.Size = UDim2.fromScale(0.25, 0.25)
-	rebound.Position = UDim2.fromScale(0.375, 0.375)
+    TweenService:Create(
+        bg,
+        TweenInfo.new(0.1),
+        {
+            BackgroundTransparency = 0,
+            BackgroundColor3 = Color3.fromRGB(2, 25, 99)
+        }
+    ):Play()
 
-	TweenService:Create(
-		bg,
-		TweenInfo.new(0.1),
-		{
-			BackgroundTransparency = 0,
-			BackgroundColor3 = Color3.fromRGB(2, 25, 99)
-		}
-	):Play()
+    scream:Play()
 
-	scream:Play()
+    task.wait(0.2)
 
-	task.wait(0.2)
+    TweenService:Create(
+        rebound,
+        TweenInfo.new(0.7),
+        {
+            Size = UDim2.new(1.982, 0, 2.257, 0),
+            Position = UDim2.new(-0.499, 0, -0.496, 0)
+        }
+    ):Play()
 
-	TweenService:Create(
-		rebound,
-		TweenInfo.new(0.7),
-		{
-			Size = UDim2.new(1.982, 0, 2.257, 0),
-			Position = UDim2.new(-0.499, 0, -0.496, 0)
-		}
-	):Play()
+    TweenService:Create(
+        bg,
+        TweenInfo.new(
+            0.1,
+            Enum.EasingStyle.Sine,
+            Enum.EasingDirection.InOut,
+            3,
+            true
+        ),
+        {
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        }
+    ):Play()
 
-	TweenService:Create(
-		bg,
-		TweenInfo.new(
-			0.1,
-			Enum.EasingStyle.Sine,
-			Enum.EasingDirection.InOut,
-			3,
-			true
-		),
-		{
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		}
-	):Play()
+    task.wait(0.4)
 
-	task.wait(0.4)
+    rebound.Visible = false
+    scream:Stop()
 
-	rebound.Visible = false
-	scream:Stop()
-
-	bg.BackgroundTransparency = 1
-	bg.BackgroundColor3 = Color3.fromRGB(2, 25, 99)
+    bg.BackgroundTransparency = 1
+    bg.BackgroundColor3 = Color3.fromRGB(2, 25, 99)
 end
 
 reboundJumpscare()
