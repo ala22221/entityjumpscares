@@ -866,8 +866,7 @@ local function spawnRebound()
                     }
                 )
 
-            end
-            end
+             end
 
         entityTable.Debug.OnEntityStartMoving =
             function()
