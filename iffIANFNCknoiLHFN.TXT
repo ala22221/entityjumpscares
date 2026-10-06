@@ -768,8 +768,8 @@ local function spawnRebound()
                 },
 
                 Cycles = {
-                    Min = 15,
-                    Max = 15,
+                    Min = 2,
+                    Max = 5,
                     WaitTime = 2
                 },
 
@@ -849,6 +849,24 @@ local function spawnRebound()
 
         entityTable.Debug.OnEntityDespawned =
             function()
+
+                giveAchievement(
+                    "Rebound",
+                    {
+                        Title =
+                            "Back to Back",
+
+                        Desc =
+                            "Encounter Rebound",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+            end
             end
 
         entityTable.Debug.OnEntityStartMoving =
