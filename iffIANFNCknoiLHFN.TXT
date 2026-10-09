@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 
 -- =========================================================
 -- Variables
@@ -320,6 +321,151 @@ caption(
     "info",
     5
 )
+
+-- =========================================================
+-- Custom Seek Music
+-- =========================================================
+
+local SeekMusicURL =
+    "https://raw.githubusercontent.com/ala22221/sounds/main/106.ogg"
+
+local SeekMusicFolder = "CustomMusic"
+local SeekMusicFile = SeekMusicFolder .. "/106.ogg"
+local SeekMusicVolume = 1
+
+task.spawn(function()
+
+    if not (writefile and isfile and getcustomasset
+        and makefolder and isfolder) then
+
+        caption(
+            "Executor doesn't support custom audio.",
+            "info",
+            5
+        )
+
+        return
+    end
+
+    pcall(function()
+
+        if not isfolder(SeekMusicFolder) then
+            makefolder(SeekMusicFolder)
+        end
+
+        -- Download once (delete the file from workspace to re-download)
+
+        if not isfile(SeekMusicFile) then
+
+            local ok, data = pcall(function()
+                return game:HttpGet(SeekMusicURL)
+            end)
+
+            if not ok or not data or #data == 0 then
+
+                caption(
+                    "Seek music download failed.",
+                    "info",
+                    5
+                )
+
+                return
+            end
+
+            writefile(SeekMusicFile, data)
+
+        end
+
+        local assetId = getcustomasset(SeekMusicFile)
+
+        local floorRep =
+            ReplicatedStorage:WaitForChild(
+                "FloorReplicated",
+                30
+            )
+
+        if not floorRep then
+            return
+        end
+
+        local function hookSound(sound)
+
+            if not sound
+                or not sound:IsA("Sound") then
+                return
+            end
+
+            sound.SoundId = assetId
+            sound.Volume = SeekMusicVolume
+
+            -- Re-apply if the game resets them
+
+            sound:GetPropertyChangedSignal("SoundId"):Connect(
+                function()
+
+                    if sound.SoundId ~= assetId then
+                        sound.SoundId = assetId
+                    end
+
+                end
+            )
+
+            sound:GetPropertyChangedSignal("Volume"):Connect(
+                function()
+
+                    if sound.Volume ~= SeekMusicVolume then
+                        sound.Volume = SeekMusicVolume
+                    end
+
+                end
+            )
+
+        end
+
+        local seekMusic =
+            floorRep:FindFirstChild("SeekMusic")
+
+        if seekMusic then
+            hookSound(seekMusic)
+        end
+
+        -- If the game re-creates it
+
+        floorRep.ChildAdded:Connect(function(child)
+
+            if child.Name == "SeekMusic" then
+                task.wait()
+                hookSound(child)
+            end
+
+        end)
+
+        -- If the game clones it elsewhere (Workspace / SoundService)
+
+        local function checkClone(obj)
+
+            if obj:IsA("Sound")
+                and obj.Name == "SeekMusic" then
+
+                task.wait()
+                hookSound(obj)
+
+            end
+
+        end
+
+        Workspace.DescendantAdded:Connect(checkClone)
+        SoundService.DescendantAdded:Connect(checkClone)
+
+        caption(
+            "Custom Seek music loaded.",
+            "info",
+            5
+        )
+
+    end)
+
+end)
 
 -- =========================================================
 -- Spawner
@@ -1363,7 +1509,7 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(
 
         task.wait(0.1)
 
-        -- 35% chance to spawn Greed
+        -- Chance to spawn Greed
 
         if math.random(1, 100)
             <= GreedSpawnChance then
