@@ -454,6 +454,67 @@ if type(Spawner.runEntity) ~= "function" then
     error("Spawner.runEntity is missing.")
 end
 
+
+-- =========================================================
+-- Despawn Models During Seek Chase
+-- Removes any Workspace model containing a BasePart named
+-- "Rebound" or "RushNew" while SeekMovingNewClone exists.
+-- =========================================================
+
+local SeekDespawnEnabled = true
+
+local function despawnSeekTaggedModels()
+    local seekClone = Workspace:FindFirstChild("SeekMovingNewClone")
+    if not seekClone then
+        return
+    end
+
+    local modelsToRemove = {}
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") then
+            for _, descendant in ipairs(obj:GetDescendants()) do
+                if descendant:IsA("BasePart")
+                    and (descendant.Name == "Rebound" or descendant.Name == "RushNew") then
+                    table.insert(modelsToRemove, obj)
+                    break
+                end
+            end
+        end
+    end
+
+    -- Destroy every matching model. Check Parent because a nested model
+    -- may already have been removed when its parent was destroyed.
+    for _, model in ipairs(modelsToRemove) do
+        if model.Parent then
+            pcall(function()
+                model:Destroy()
+            end)
+        end
+    end
+end
+
+task.spawn(function()
+    while SeekDespawnEnabled do
+        despawnSeekTaggedModels()
+        task.wait(0.1)
+    end
+end)
+
+-- If Seek appears, check immediately.
+Workspace.ChildAdded:Connect(function(child)
+    if child.Name == "SeekMovingNewClone" then
+        task.defer(despawnSeekTaggedModels)
+    end
+end)
+
+-- If a tagged entity model is added during the chase, check again.
+Workspace.DescendantAdded:Connect(function()
+    if SeekDespawnEnabled and Workspace:FindFirstChild("SeekMovingNewClone") then
+        task.defer(despawnSeekTaggedModels)
+    end
+end)
+
 -- =========================================================
 -- Spawn Deer God
 -- =========================================================
