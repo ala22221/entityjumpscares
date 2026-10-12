@@ -406,6 +406,161 @@ task.spawn(function()
 
 end)
 
+
+-- =========================================================
+-- Blue Health Music Replacer (Intro.ogg)
+-- Downloads once into the executor's file workspace and
+-- replaces PlayerGui.MainUI.Initiator.Main_Game.Health.Music.Blue.
+-- =========================================================
+
+local BlueMusicURL = "https://raw.githubusercontent.com/ala22221/sounds/main/Intro.ogg"
+local BlueMusicFolder = "CustomMusic"
+local BlueMusicFile = BlueMusicFolder .. "/Intro.ogg"
+local BlueMusicVolume = 1
+local BlueMusicLooped = true
+
+task.spawn(function()
+    if not (writefile and isfile and getcustomasset and makefolder and isfolder) then
+        caption("Executor doesn't support custom audio.", "info", 5)
+        return
+    end
+
+    local ok, err = pcall(function()
+        if not isfolder(BlueMusicFolder) then
+            makefolder(BlueMusicFolder)
+        end
+
+        -- Download only when the cached file is missing.
+        if not isfile(BlueMusicFile) then
+            local downloadOK, data = pcall(function()
+                return game:HttpGet(BlueMusicURL)
+            end)
+
+            if not downloadOK or not data or #data == 0 then
+                error("Intro.ogg download failed.")
+            end
+
+            writefile(BlueMusicFile, data)
+        end
+
+        local assetId = getcustomasset(BlueMusicFile)
+
+        local function findBlueMusic()
+            local playerGui = Plr:FindFirstChildOfClass("PlayerGui")
+            if not playerGui then
+                return nil
+            end
+
+            local mainUI = playerGui:FindFirstChild("MainUI")
+            local initiator = mainUI and mainUI:FindFirstChild("Initiator")
+            local mainGame = initiator and initiator:FindFirstChild("Main_Game")
+            local health = mainGame and mainGame:FindFirstChild("Health")
+            local music = health and health:FindFirstChild("Music")
+            local blue = music and music:FindFirstChild("Blue")
+
+            if blue and blue:IsA("Sound") then
+                return blue
+            end
+
+            return nil
+        end
+
+        local hookedSounds = {}
+
+        local function hookBlueMusic(sound)
+            if not sound or not sound:IsA("Sound") or hookedSounds[sound] then
+                return
+            end
+
+            hookedSounds[sound] = true
+
+            local function applyReplacement()
+                if not sound.Parent then
+                    return
+                end
+
+                if sound.SoundId ~= assetId then
+                    sound.SoundId = assetId
+                end
+
+                if sound.Volume ~= BlueMusicVolume then
+                    sound.Volume = BlueMusicVolume
+                end
+
+                if sound.Looped ~= BlueMusicLooped then
+                    sound.Looped = BlueMusicLooped
+                end
+            end
+
+            applyReplacement()
+
+            sound:GetPropertyChangedSignal("SoundId"):Connect(function()
+                if sound.Parent and sound.SoundId ~= assetId then
+                    sound.SoundId = assetId
+                end
+            end)
+
+            sound:GetPropertyChangedSignal("Volume"):Connect(function()
+                if sound.Parent and sound.Volume ~= BlueMusicVolume then
+                    sound.Volume = BlueMusicVolume
+                end
+            end)
+
+            sound:GetPropertyChangedSignal("Looped"):Connect(function()
+                if sound.Parent and sound.Looped ~= BlueMusicLooped then
+                    sound.Looped = BlueMusicLooped
+                end
+            end)
+
+            -- Start playing after applying the local replacement.
+            pcall(function()
+                sound:Play()
+            end)
+        end
+
+        -- Wait for the existing Blue sound, if it hasn't loaded yet.
+        local playerGui = Plr:WaitForChild("PlayerGui", 30)
+        if not playerGui then
+            error("PlayerGui did not load.")
+        end
+
+        local blue = findBlueMusic()
+        if not blue then
+            local mainUI = playerGui:WaitForChild("MainUI", 30)
+            local initiator = mainUI and mainUI:WaitForChild("Initiator", 30)
+            local mainGame = initiator and initiator:WaitForChild("Main_Game", 30)
+            local health = mainGame and mainGame:WaitForChild("Health", 30)
+            local music = health and health:WaitForChild("Music", 30)
+            blue = music and music:WaitForChild("Blue", 30)
+        end
+
+        if blue and blue:IsA("Sound") then
+            hookBlueMusic(blue)
+        else
+            error("Could not find the guiding light music.")
+        end
+
+        -- Re-apply if the game replaces the Blue sound instance.
+        playerGui.DescendantAdded:Connect(function(obj)
+            if obj:IsA("Sound") and obj.Name == "Blue" then
+                task.defer(function()
+                    local current = findBlueMusic()
+                    if current == obj then
+                        hookBlueMusic(obj)
+                    end
+                end)
+            end
+        end)
+
+        caption("guiding light music replacer loaded!", "info", 5)
+    end)
+
+    if not ok then
+        warn("[Guiding Light Music Replacer] " .. tostring(err))
+        caption("guiding light music replacement failed. Check console.", "info", 5)
+    end
+end)
+
 -- =========================================================
 -- Spawner
 -- =========================================================
