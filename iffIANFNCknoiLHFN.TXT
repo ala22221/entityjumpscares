@@ -1521,160 +1521,63 @@ local function spawnGreed()
 end
 
 -- =========================================================
--- Automatic Spawning
+-- Door-Based Random Entity Spawning
 -- =========================================================
 
--- Depth every 60 seconds
+-- Chances are percentages. Change these values if desired.
+local DepthSpawnChance = 35
+local ReboundSpawnChance = 35
+local DeerGodSpawnChance = 35
+-- A60SpawnChance and GreedSpawnChance are defined in Spawn Chances above.
 
-task.spawn(function()
+-- Use the same full LatestRoom path as the original Greed door handler.
+local GameData = ReplicatedStorage:WaitForChild("GameData")
+local LatestRoom = GameData:WaitForChild("LatestRoom")
 
-    while true do
-
-        task.wait(60)
-
-        spawnDepth()
-
-    end
-
-end)
-
--- Rebound every 120 seconds
-
-task.spawn(function()
-
-    while true do
-
-        task.wait(120)
-
-        spawnRebound()
-
-    end
-
-end)
-
--- Deer God every 180 seconds
-
-task.spawn(function()
-
-    while true do
-
-        task.wait(180)
-
-        spawnDeerGod()
-
-    end
-
-end)
-
--- =========================================================
--- A-60 Random Chance
--- =========================================================
-
-task.spawn(function()
-
-    while true do
-
-        task.wait(60)
-
-        if math.random(1, 100)
-            <= A60SpawnChance then
-
-            spawnA60()
-
-        end
-
-    end
-
-end)
-
--- =========================================================
--- Greed Random Chance Every 5 Doors
--- =========================================================
-
-local GameData =
-    ReplicatedStorage:WaitForChild("GameData")
-
-local LatestRoom =
-    GameData:WaitForChild("LatestRoom")
-
-local lastRoom =
-    LatestRoom.Value
-
+local lastRoom = LatestRoom.Value
 local greedDoorCounter = 0
 
-LatestRoom:GetPropertyChangedSignal("Value"):Connect(
-    function()
-
-        local newRoom =
-            LatestRoom.Value
-
-        if newRoom == lastRoom then
-            return
-        end
-
-        lastRoom = newRoom
-
-        -- Count this newly opened door
-
-        greedDoorCounter =
-            greedDoorCounter + 1
-
-        -- Only check every 5 doors
-
-        if greedDoorCounter < GreedEveryDoors then
-            return
-        end
-
-        -- Reset the counter
-
-        greedDoorCounter = 0
-
-        -- Get the new room
-
-        local room =
-            Workspace.CurrentRooms:FindFirstChild(
-                tostring(newRoom)
-            )
-
-        if not room then
-
-            task.spawn(function()
-
-                local newRoomObject =
-                    Workspace.CurrentRooms:WaitForChild(
-                        tostring(newRoom),
-                        5
-                    )
-
-                if not newRoomObject then
-                    return
-                end
-
-                if math.random(1, 100)
-                    <= GreedSpawnChance then
-
-                    spawnGreed()
-
-                end
-
-            end)
-
-            return
-        end
-
-        task.wait(0.1)
-
-        -- Chance to spawn Greed
-
-        if math.random(1, 100)
-            <= GreedSpawnChance then
-
-            spawnGreed()
-
-        end
-
+local function rollSpawn(chance, spawnFunction)
+    if math.random(1, 100) <= chance then
+        task.spawn(spawnFunction)
     end
-)
+end
+
+-- Every change to GameData.LatestRoom.Value represents a newly reached room.
+-- All automatic entity spawning is handled here; no entity spawn timers remain.
+LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
+    local newRoom = LatestRoom.Value
+
+    if newRoom == lastRoom then
+        return
+    end
+
+    lastRoom = newRoom
+
+    -- Do not even roll an entity's chance until its minimum door is reached.
+    if newRoom >= 5 then
+        rollSpawn(DepthSpawnChance, spawnDepth)
+    end
+
+    if newRoom >= 12 then
+        rollSpawn(ReboundSpawnChance, spawnRebound)
+    end
+
+    if newRoom >= 23 then
+        rollSpawn(DeerGodSpawnChance, spawnDeerGod)
+    end
+
+    if newRoom >= 35 then
+        rollSpawn(A60SpawnChance, spawnA60)
+    end
+
+    -- Preserve Greed's original behavior: one 20% roll every 5 door changes.
+    greedDoorCounter = greedDoorCounter + 1
+    if greedDoorCounter >= GreedEveryDoors then
+        greedDoorCounter = 0
+        rollSpawn(GreedSpawnChance, spawnGreed)
+    end
+end)
 
 -- =========================================================
 -- Admin Commands
