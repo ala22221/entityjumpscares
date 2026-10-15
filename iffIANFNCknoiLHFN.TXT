@@ -1051,7 +1051,7 @@ local function spawnRebound()
 
                 Speed = 350,
 
-                DelayTime = 2,
+                DelayTime = 4,
 
                 HeightOffset = 0,
 
@@ -1331,7 +1331,25 @@ local function spawnA60()
 
         entityTable.Debug.OnEntityDespawned =
             function()
-            end
+
+                giveAchievement(
+                    "A-69",
+                    {
+                        Title =
+                            "A Nostalgic Fright!",
+
+                        Desc =
+                            "Encounter the rare entity called A-60",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+             end
+
 
         entityTable.Debug.OnEntityStartMoving =
             function()
@@ -1525,9 +1543,9 @@ end
 -- =========================================================
 
 -- Chances are percentages. Change these values if desired.
-local DepthSpawnChance = 35
-local ReboundSpawnChance = 35
-local DeerGodSpawnChance = 35
+local DepthSpawnChance = 15
+local ReboundSpawnChance = 10
+local DeerGodSpawnChance = 10
 -- A60SpawnChance and GreedSpawnChance are defined in Spawn Chances above.
 
 -- Use the same full LatestRoom path as the original Greed door handler.
