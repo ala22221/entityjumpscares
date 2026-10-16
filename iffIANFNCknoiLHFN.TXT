@@ -854,7 +854,7 @@ local function spawnDepth()
                 CustomName = "Depth",
 
                 Model =
-                    "rbxassetid://11535848347",
+                    "rbxassetid://136609118183210",
 
                 Speed = 150,
 
@@ -1047,7 +1047,7 @@ local function spawnRebound()
                 CustomName = "Rebound",
 
                 Model =
-                    "rbxassetid://109731682196761",
+                    "rbxassetid://94407292964752",
 
                 Speed = 350,
 
