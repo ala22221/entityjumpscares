@@ -610,65 +610,162 @@ if type(Spawner.runEntity) ~= "function" then
 end
 
 
+
 -- =========================================================
--- Despawn Models During Seek Chase
--- Removes any Workspace model containing a BasePart named
--- "Rebound" or "RushNew" while SeekMovingNewClone exists.
+-- Despawn Models During Seek Chase (Optimized)
 -- =========================================================
 
 local SeekDespawnEnabled = true
+local Workspace = game:GetService("Workspace")
 
-local function despawnSeekTaggedModels()
-    local seekClone = Workspace:FindFirstChild("SeekMovingNewClone")
-    if not seekClone then
+local SEEK_NAME = "SeekMovingNewClone"
+local TARGET_PARTS = {
+    Rebound = true,
+    RushNew = true
+}
+
+local seekActive = false
+local cleanupInProgress = false
+
+-- Find the nearest Model containing a targeted part.
+local function getTargetModel(part)
+    if not part or not part:IsA("BasePart") then
+        return nil
+    end
+
+    if not TARGET_PARTS[part.Name] then
+        return nil
+    end
+
+    local current = part.Parent
+    local nearestModel = nil
+
+    while current and current ~= Workspace do
+        if current:IsA("Model") then
+            nearestModel = current
+            break
+        end
+
+        current = current.Parent
+    end
+
+    -- Never destroy Seek itself or anything inside Seek.
+    if nearestModel then
+        local seekClone = Workspace:FindFirstChild(SEEK_NAME)
+
+        if seekClone and (
+            nearestModel == seekClone
+            or nearestModel:IsDescendantOf(seekClone)
+        ) then
+            return nil
+        end
+    end
+
+    return nearestModel
+end
+
+local function removeTargetPart(part)
+    if not SeekDespawnEnabled then
         return
     end
 
-    local modelsToRemove = {}
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") then
-            for _, descendant in ipairs(obj:GetDescendants()) do
-                if descendant:IsA("BasePart")
-                    and (descendant.Name == "Rebound" or descendant.Name == "RushNew") then
-                    table.insert(modelsToRemove, obj)
-                    break
-                end
-            end
-        end
+    if not Workspace:FindFirstChild(SEEK_NAME) then
+        return
     end
 
-    -- Destroy every matching model. Check Parent because a nested model
-    -- may already have been removed when its parent was destroyed.
-    for _, model in ipairs(modelsToRemove) do
-        if model.Parent then
-            pcall(function()
-                model:Destroy()
-            end)
-        end
+    local model = getTargetModel(part)
+
+    if model and model.Parent then
+        pcall(function()
+            model:Destroy()
+        end)
     end
 end
 
-task.spawn(function()
-    while SeekDespawnEnabled do
-        despawnSeekTaggedModels()
-        task.wait(0.1)
+-- One full scan when Seek appears.
+-- This replaces the expensive repeating Workspace scan.
+local function cleanupExistingTargets()
+    if cleanupInProgress or not SeekDespawnEnabled then
+        return
     end
-end)
 
--- If Seek appears, check immediately.
+    if not Workspace:FindFirstChild(SEEK_NAME) then
+        return
+    end
+
+    cleanupInProgress = true
+
+    local success, err = pcall(function()
+        local descendants = Workspace:GetDescendants()
+        local modelsToRemove = {}
+
+        for _, obj in ipairs(descendants) do
+            if obj:IsA("BasePart") and TARGET_PARTS[obj.Name] then
+                local model = getTargetModel(obj)
+
+                if model and model.Parent then
+                    modelsToRemove[model] = true
+                end
+            end
+        end
+
+        for model in pairs(modelsToRemove) do
+            if model.Parent then
+                pcall(function()
+                    model:Destroy()
+                end)
+            end
+        end
+    end)
+
+    cleanupInProgress = false
+
+    if not success then
+        warn("[Seek Cleanup] Error:", err)
+    end
+end
+
+-- Detect Seek appearing or disappearing.
+local function updateSeekState()
+    local seekClone = Workspace:FindFirstChild(SEEK_NAME)
+    local wasActive = seekActive
+
+    seekActive = seekClone ~= nil
+
+    if seekActive and not wasActive then
+        task.defer(cleanupExistingTargets)
+    end
+end
+
 Workspace.ChildAdded:Connect(function(child)
-    if child.Name == "SeekMovingNewClone" then
-        task.defer(despawnSeekTaggedModels)
+    if child.Name == SEEK_NAME then
+        updateSeekState()
     end
 end)
 
--- If a tagged entity model is added during the chase, check again.
-Workspace.DescendantAdded:Connect(function()
-    if SeekDespawnEnabled and Workspace:FindFirstChild("SeekMovingNewClone") then
-        task.defer(despawnSeekTaggedModels)
+Workspace.ChildRemoved:Connect(function(child)
+    if child.Name == SEEK_NAME then
+        updateSeekState()
     end
 end)
+
+-- Only react to newly added parts with the exact target names.
+-- Do not rescan Workspace for unrelated additions.
+Workspace.DescendantAdded:Connect(function(obj)
+    if not SeekDespawnEnabled or not seekActive then
+        return
+    end
+
+    if obj:IsA("BasePart") and TARGET_PARTS[obj.Name] then
+        task.defer(function()
+            removeTargetPart(obj)
+        end)
+    end
+end)
+
+-- Handle Seek already existing when this section starts.
+updateSeekState()
+
 
 -- =========================================================
 -- Spawn Deer God
