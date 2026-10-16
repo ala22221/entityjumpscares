@@ -1085,7 +1085,7 @@ local function spawnRebound()
             CustomName = "Rebound",
             Model = "rbxassetid://94407292964752",
             Speed = 350,
-            DelayTime = 4,
+            DelayTime = 6,
             HeightOffset = 0,
             CanKill = true,
             KillRange = 50,
