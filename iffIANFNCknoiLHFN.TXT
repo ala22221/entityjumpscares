@@ -364,7 +364,7 @@ task.spawn(function()
         Title = "Welcome",
         Desc = "This hotel seems old..",
         Reason = "...",
-        Image = "rbxassetid://80921932542636"
+        Image = "rbxassetid://13298908919"
     })
 end)
 
@@ -950,7 +950,7 @@ local function spawnDeerGod()
                 Title = "Why are you running?",
                 Desc = "Encounter the Deer God",
                 Reason = "...",
-                Image = "rbxassetid://80921932542636"
+                Image = "rbxassetid://11395249132"
             })
         end
 
@@ -967,6 +967,7 @@ local function spawnDeerGod()
         end)
     end)
 end
+
 
 -- =========================================================
 -- Spawn Depth
@@ -1038,6 +1039,7 @@ local function spawnDepth()
     end)
 
     if not success or not entityTable then
+        warn("[Depth] Failed to create entity:", entityTable)
         return
     end
 
@@ -1065,7 +1067,7 @@ local function spawnDepth()
                 Title = "Deep",
                 Desc = "Survive Depth",
                 Reason = "...",
-                Image = "rbxassetid://80921932542636"
+                Image = "rbxassetid://10840981841"
             })
         end
 
@@ -1073,15 +1075,42 @@ local function spawnDepth()
         entityTable.Debug.OnEntityFinishedRebound = function() end
         entityTable.Debug.OnEntityEnteredRoom = function() end
         entityTable.Debug.OnLookAtEntity = function() end
-        entityTable.Debug.OnDeath = function() end
+
+        -- Depth custom jumpscare
+        entityTable.Debug.OnDeath = function()
+            task.spawn(function()
+                local ok, err = pcall(function()
+                    local url =
+                        "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/depthyscare.lua"
+
+                    local source = game:HttpGet(url)
+                    local loader, compileError = loadstring(source)
+
+                    if not loader then
+                        error(compileError or "Failed to compile Depth jumpscare")
+                    end
+
+                    loader()
+                end)
+
+                if not ok then
+                    warn("[Depth Jumpscare] " .. tostring(err))
+                end
+            end)
+        end
     end
 
     task.spawn(function()
-        pcall(function()
+        local ok, err = pcall(function()
             Spawner.runEntity(entityTable)
         end)
+
+        if not ok then
+            warn("[Depth] Failed to run entity:", err)
+        end
     end)
 end
+
 
 -- =========================================================
 -- Spawn Rebound
@@ -1164,7 +1193,7 @@ local function spawnRebound()
                 Title = "Back to Back",
                 Desc = "Encounter Rebound",
                 Reason = "...",
-                Image = "rbxassetid://80921932542636"
+                Image = "rbxassetid://11666287209"
             })
         end
 
@@ -1270,7 +1299,7 @@ local function spawnA60()
                 Title = "A Nostalgic Fright!",
                 Desc = "Encounter the rare entity called A-60",
                 Reason = "...",
-                Image = "rbxassetid://80921932542636"
+                Image = "rbxassetid://11395251044"
             })
         end
 
