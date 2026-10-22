@@ -10,27 +10,7 @@ local REBOUND_IMAGE = "rbxassetid://123822082171984"
 local SOUND_URL = "rbxassetid://5263560896"
 local SOUND_FILE = "deepscare.ogg"
 
-local getAsset = getcustomasset or getsynasset
-
-if not getAsset or not isfile or not writefile then
-    warn("Your executor does not support custom GitHub assets.")
-    return
-end
-
-if not isfile(SOUND_FILE) then
-    local success, data = pcall(function()
-        return game:HttpGet(SOUND_URL)
-    end)
-
-    if not success then
-        warn("Failed to download depth sound.")
-        return
-    end
-
-    writefile(SOUND_FILE, data)
-end
-
-local REBOUND_SOUND = getAsset(SOUND_FILE)
+local REBOUND_SOUND = SOUND_URL
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "DepthJumpscare"
