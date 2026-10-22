@@ -41,7 +41,7 @@ local scream = Instance.new("Sound")
 scream.Name = "DepthScream"
 scream.SoundId = REBOUND_SOUND
 scream.Volume = 1
-scream.PlaybackSpeed = 3
+scream.PlaybackSpeed = 1
 scream.Parent = gui
 
 
