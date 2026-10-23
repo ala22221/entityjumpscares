@@ -1,8 +1,5 @@
-
 -- =========================================================
--- Easy'nt Mode
--- Made by someguy111131
--- Thanks to DripCapybara for the fixed modules
+-- Services
 -- =========================================================
 
 local Players = game:GetService("Players")
@@ -11,45 +8,27 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 
+-- =========================================================
+-- Variables
+-- =========================================================
+
 local Plr = Players.LocalPlayer
 
--- =========================================================
--- Existing Game Changes
--- =========================================================
-
-pcall(function()
-    Plr.PlayerGui.MainUI.Initiator.Main_Game
-        .RemoteListener.Modules.HideMonster.Scare.SoundId =
-        "rbxassetid://5263560896"
-
-    ReplicatedStorage.Entities.Screech.Top.Eyes.Color =
-        Color3.fromRGB(255, 0, 0)
-
-    Plr.PlayerGui.MainUI.Initiator.Main_Game
-        .RemoteListener.Modules.Screech.Caught.SoundId =
-        "rbxassetid://297569488"
-
-    Plr.PlayerGui.MainUI.Initiator.Main_Game
-        .RemoteListener.Modules.Screech.Attack.SoundId =
-        "rbxassetid://18967004856"
-end)
-
--- =========================================================
--- Admin
--- =========================================================
-
 local admeen = {
-    "alamgir_500newacc" -- the owner
-    "glenn_larpoi" -- owners alt,dont demote
+    "alamgir_500newacc", -- Owner
+    "glenn_larpoi"       -- Owner alt
 }
 
 local function isAdmin(name)
+
     name = string.lower(tostring(name))
 
     for _, adminName in ipairs(admeen) do
+
         if string.lower(adminName) == name then
             return true
         end
+
     end
 
     return false
@@ -63,191 +42,57 @@ local IsAdmin = isAdmin(Plr.Name)
 
 local A60SpawnChance = 35
 local GreedSpawnChance = 20
+
+-- Greed gets a chance every X doors
 local GreedEveryDoors = 5
 
-local DepthSpawnChance = 15
-local ReboundSpawnChance = 10
-local DeerGodSpawnChance = 10
-
 -- =========================================================
--- Seek Model Changer
+-- SeekMoving / Figure
 -- =========================================================
 
-local SEEK_NAME = "SeekMovingNewClone"
-local currentSeek = nil
-local seekConnections = {}
-local seekPartConnections = {}
-local seekSetupToken = 0
+coroutine.wrap(function()
+    while true do
+        wait(0.5)
+        ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
 
-local function disconnectSeekConnections()
-    for _, connection in ipairs(seekConnections) do
-        connection:Disconnect()
-    end
+        local seekClone = Workspace:FindFirstChild("SeekMovingNewClone")
 
-    for _, connection in ipairs(seekPartConnections) do
-        connection:Disconnect()
-    end
+        if seekClone and seekClone:FindFirstChild("SeekRig") then
+            local seekRig = seekClone.SeekRig
 
-    table.clear(seekConnections)
-    table.clear(seekPartConnections)
-end
+            local figure = seekClone:FindFirstChild("Figure")
+            if figure then
+                figure.Transparency = 0
 
-local function applySeekChanges(seekClone)
-    if not seekClone or not seekClone.Parent then
-        return
-    end
-
-    local seekRig = seekClone:FindFirstChild("SeekRig")
-    local figure = seekClone:FindFirstChild("Figure")
-
-    if figure and figure:IsA("BasePart") then
-        figure.Transparency = 0
-
-        local scream = figure:FindFirstChild("Scream")
-        local flange = scream and scream:FindFirstChild(
-            "FlangeSoundEffect"
-        )
-
-        if flange then
-            flange.Enabled = false
-        end
-
-        local attachment = figure:FindFirstChild("Attachment")
-        local emitter = attachment and attachment:FindFirstChild(
-            "ParticleEmitter"
-        )
-
-        if emitter then
-            emitter.Enabled = true
-        end
-
-        local camAttach = figure:FindFirstChild("CamAttach")
-        local spotlight = camAttach and camAttach:FindFirstChild(
-            "SpotLight"
-        )
-
-        if spotlight then
-            spotlight.Enabled = true
-        end
-    end
-
-    if seekRig then
-        for _, object in ipairs(seekRig:GetDescendants()) do
-            if object:IsA("BasePart") then
-                object.Transparency = 1
-            elseif object:IsA("Decal")
-                or object:IsA("Texture") then
-                object.Transparency = 1
-            end
-        end
-    end
-end
-
-local function watchSeekPart(object, seekClone)
-    if not object:IsA("BasePart") then
-        return
-    end
-
-    local connection = object:GetPropertyChangedSignal(
-        "Transparency"
-    ):Connect(function()
-        if currentSeek ~= seekClone or not seekClone.Parent then
-            return
-        end
-
-        task.defer(function()
-            if currentSeek == seekClone and seekClone.Parent then
-                applySeekChanges(seekClone)
-            end
-        end)
-    end)
-
-    table.insert(seekPartConnections, connection)
-end
-
-local function setupSeek(seekClone)
-    if not seekClone or not seekClone.Parent then
-        return
-    end
-
-    if currentSeek == seekClone then
-        applySeekChanges(seekClone)
-        return
-    end
-
-    disconnectSeekConnections()
-
-    currentSeek = seekClone
-    seekSetupToken += 1
-
-    local setupToken = seekSetupToken
-
-    applySeekChanges(seekClone)
-
-    for _, object in ipairs(seekClone:GetDescendants()) do
-        watchSeekPart(object, seekClone)
-    end
-
-    table.insert(
-        seekConnections,
-        seekClone.DescendantAdded:Connect(function(object)
-            if currentSeek ~= seekClone then
-                return
-            end
-
-            watchSeekPart(object, seekClone)
-
-            task.defer(function()
-                if currentSeek == seekClone and seekClone.Parent then
-                    applySeekChanges(seekClone)
+                local scream = figure:FindFirstChild("Scream")
+                local flange = scream and scream:FindFirstChild("FlangeSoundEffect")
+                if flange then
+                    flange.Enabled = false
                 end
-            end)
-        end)
-    )
 
-    table.insert(
-        seekConnections,
-        seekClone.AncestryChanged:Connect(function()
-            if currentSeek == seekClone and not seekClone.Parent then
-                currentSeek = nil
-                disconnectSeekConnections()
-            end
-        end)
-    )
+                local attachment = figure:FindFirstChild("Attachment")
+                local emitter = attachment and attachment:FindFirstChild("ParticleEmitter")
+                if emitter then
+                    emitter.Enabled = true
+                end
 
-    task.spawn(function()
-        for _ = 1, 10 do
-            if currentSeek ~= seekClone
-                or not seekClone.Parent
-                or setupToken ~= seekSetupToken then
-                return
+                local camAttach = figure:FindFirstChild("CamAttach")
+                local spotlight = camAttach and camAttach:FindFirstChild("SpotLight")
+                if spotlight then
+                    spotlight.Enabled = true
+                end
             end
 
-            applySeekChanges(seekClone)
-            task.wait(0.1)
+            for _, object in ipairs(seekRig:GetDescendants()) do
+                if object:IsA("BasePart") then
+                    object.Transparency = 1
+                elseif object:IsA("Decal") or object:IsA("Texture") then
+                    object.Transparency = 1
+                end
+            end
         end
-    end)
-end
-
-Workspace.ChildAdded:Connect(function(child)
-    if child.Name == SEEK_NAME then
-        setupSeek(child)
     end
-end)
-
-Workspace.ChildRemoved:Connect(function(child)
-    if child == currentSeek then
-        currentSeek = nil
-        seekSetupToken += 1
-        disconnectSeekConnections()
-    end
-end)
-
-local existingSeek = Workspace:FindFirstChild(SEEK_NAME)
-
-if existingSeek then
-    setupSeek(existingSeek)
-end
+end)()
 
 -- =========================================================
 -- Captions
@@ -256,6 +101,7 @@ end
 local DoorsCaptions
 
 pcall(function()
+
     local source = game:HttpGet(
         "https://raw.githubusercontent.com/RegularVynixu/DOORS-Captions/main/init.luau"
     )
@@ -265,27 +111,33 @@ pcall(function()
     if loader then
         DoorsCaptions = loader()
     end
+
 end)
 
 local function caption(text, captionType, duration)
+
     if DoorsCaptions
         and type(DoorsCaptions.caption) == "function" then
+
         pcall(function()
+
             DoorsCaptions.caption(
                 text,
                 captionType or "info",
                 duration or 5
             )
+
         end)
+
     end
 end
 
 -- =========================================================
--- Achievement System - Retry Fix
+-- Achievement System (retry-safe)
 -- =========================================================
 
-local AchievementGiver = nil
-local givenAchievements = {}
+local AchievementGiver
+-- Only blocks simultaneous duplicate requests. Achievements may display again later.
 local achievementsInProgress = {}
 
 local AchievementURL =
@@ -296,161 +148,115 @@ local function loadAchievementGiver()
         return true
     end
 
-    local ok, result = pcall(function()
-        local source = game:HttpGet(AchievementURL)
-        local loader, compileError = loadstring(source)
+    for attempt = 1, 5 do
+        local ok, result = pcall(function()
+            local source = game:HttpGet(AchievementURL)
+            local loader, compileError = loadstring(source)
+            if not loader then
+                error(compileError or "Achievement module failed to compile")
+            end
+            return loader()
+        end)
 
-        if not loader then
-            error(compileError or "Compilation failed")
-        end
-
-        return loader()
-    end)
-
-    if not ok then
-        warn("[Achievements] Loader error:", result)
-        return false
-    end
-
-    if type(result) ~= "function" then
-        warn(
-            "[Achievements] Expected a function, got:",
-            typeof(result)
-        )
-        return false
-    end
-
-    AchievementGiver = result
-    print("[Achievements] Giver loaded successfully.")
-
-    return true
-end
-
-local function waitForAchievementUI(timeout)
-    local deadline = os.clock() + (timeout or 60)
-
-    while os.clock() < deadline do
-        local playerGui = Plr:FindFirstChildOfClass("PlayerGui")
-        local globalUI = playerGui
-            and playerGui:FindFirstChild("GlobalUI")
-        local holder = globalUI
-            and globalUI:FindFirstChild("AchievementsHolder")
-        local achievement = holder
-            and holder:FindFirstChild("Achievement")
-
-        if achievement then
+        if ok and type(result) == "function" then
+            AchievementGiver = result
             return true
         end
 
-        task.wait(0.5)
+        warn("[Easy'nt Mode] Achievement module load attempt " .. attempt .. " failed: " .. tostring(result))
+        task.wait(1)
+    end
+
+    return false
+end
+
+local function waitForAchievementUI(timeout)
+    timeout = timeout or 10
+    local deadline = os.clock() + timeout
+
+    while os.clock() < deadline do
+        local playerGui = Plr:FindFirstChildOfClass("PlayerGui")
+        local globalUI = playerGui and playerGui:FindFirstChild("GlobalUI")
+        local holder = globalUI and globalUI:FindFirstChild("AchievementsHolder")
+        local template = holder and holder:FindFirstChild("Achievement")
+
+        if template then
+            return true
+        end
+
+        task.wait(0.25)
     end
 
     return false
 end
 
 local function giveAchievement(id, data)
-    if givenAchievements[id] or achievementsInProgress[id] then
+    if achievementsInProgress[id] then
         return
     end
 
     achievementsInProgress[id] = true
 
     task.spawn(function()
-        local delivered = false
+        local succeeded = false
 
-        for attempt = 1, 10 do
-            if givenAchievements[id] then
-                delivered = true
-                break
-            end
-
-            if not Plr.Parent then
-                break
-            end
-
+        for attempt = 1, 30 do
             if not loadAchievementGiver() then
-                warn("[Achievements] Retry", attempt, "for", id)
-                task.wait(2)
-                continue
-            end
-
-            if not waitForAchievementUI(10) then
-                warn(
-                    "[Achievements] UI not ready for",
-                    id,
-                    "attempt",
-                    attempt
-                )
-
                 task.wait(1)
-                continue
-            end
+            elseif waitForAchievementUI(2) then
+                local ok, err = pcall(function()
+                    AchievementGiver(data)
+                end)
 
-            local ok, err = pcall(function()
-                AchievementGiver(data)
-            end)
+                if ok then
+                    succeeded = true
+                    break
+                end
 
-            if ok then
-                givenAchievements[id] = true
-                delivered = true
-
-                print("[Achievements] Giver called for:", id)
-                break
+                warn("[Easy'nt Mode] Achievement '" .. tostring(id) .. "' attempt " .. attempt .. " failed: " .. tostring(err))
+                task.wait(0.5)
             else
-                warn(
-                    "[Achievements] Failed to give",
-                    id,
-                    tostring(err)
-                )
-
-                task.wait(1)
+                task.wait(0.5)
             end
+        end
+
+        if not succeeded then
+            warn("[Easy'nt Mode] Could not display achievement: " .. tostring(id))
         end
 
         achievementsInProgress[id] = nil
-
-        if not delivered then
-            warn(
-                "[Achievements] Failed after retries:",
-                id,
-                "- it can be requested again."
-            )
-        end
     end)
 end
-
-task.spawn(function()
-    for _ = 1, 10 do
-        if loadAchievementGiver() then
-            return
-        end
-
-        task.wait(2)
-    end
-
-    warn("[Achievements] Could not load the achievement giver.")
-end)
 
 -- =========================================================
 -- Welcome Achievement
 -- =========================================================
 
 task.spawn(function()
+
     task.wait(3)
 
-    giveAchievement("Welcome", {
-        Title = "Welcome",
-        Desc = "This hotel seems old..",
-        Reason = "...",
-        Image = "rbxassetid://13298908919"
-    })
+    giveAchievement(
+        "Welcome",
+        {
+            Title = "Welcome",
+            Desc = "This hotel seems old..",
+            Reason = "...",
+            Image = "rbxassetid://13298908919"
+        }
+    )
+
 end)
 
 -- =========================================================
 -- Loaded Messages
 -- =========================================================
 
-caption("Easy'nt Mode loaded successfully.", "info", 5)
+caption(
+    "Easy'nt Mode loaded successfully.",
+    "info",
+    5
+)
 
 caption(
     "Made by someguy111131, DripCapybara for the fixed stuff",
@@ -458,7 +264,11 @@ caption(
     5
 )
 
-caption("Good Luck.", "info", 5)
+caption(
+    "Good Luck.",
+    "info",
+    5
+)
 
 -- =========================================================
 -- Custom Seek Music
@@ -472,122 +282,154 @@ local SeekMusicFile = SeekMusicFolder .. "/106.ogg"
 local SeekMusicVolume = 1
 
 task.spawn(function()
-    if not (
-        writefile and isfile and getcustomasset
-        and makefolder and isfolder
-    ) then
-        caption("Executor doesn't support custom audio.", "info", 5)
+
+    if not (writefile and isfile and getcustomasset
+        and makefolder and isfolder) then
+
+        caption(
+            "Executor doesn't support custom audio.",
+            "info",
+            5
+        )
+
         return
     end
 
-    local ok, err = pcall(function()
+    pcall(function()
+
         if not isfolder(SeekMusicFolder) then
             makefolder(SeekMusicFolder)
         end
 
+        -- Download once (delete the file from workspace to re-download)
+
         if not isfile(SeekMusicFile) then
-            local success, data = pcall(function()
+
+            local ok, data = pcall(function()
                 return game:HttpGet(SeekMusicURL)
             end)
 
-            if not success or not data or #data == 0 then
-                caption("Seek music download failed.", "info", 5)
+            if not ok or not data or #data == 0 then
+
+                caption(
+                    "Seek music download failed.",
+                    "info",
+                    5
+                )
+
                 return
             end
 
             writefile(SeekMusicFile, data)
+
         end
 
         local assetId = getcustomasset(SeekMusicFile)
 
-        local floorRep = ReplicatedStorage:WaitForChild(
-            "FloorReplicated",
-            30
-        )
+        local floorRep =
+            ReplicatedStorage:WaitForChild(
+                "FloorReplicated",
+                30
+            )
 
         if not floorRep then
             return
         end
 
-        local hookedSounds = {}
-
         local function hookSound(sound)
-            if not sound:IsA("Sound") or hookedSounds[sound] then
+
+            if not sound
+                or not sound:IsA("Sound") then
                 return
             end
 
-            hookedSounds[sound] = true
+            sound.SoundId = assetId
+            sound.Volume = SeekMusicVolume
 
-            local function applyReplacement()
-                if not sound.Parent then
-                    return
-                end
-
-                sound.SoundId = assetId
-                sound.Volume = SeekMusicVolume
-            end
-
-            applyReplacement()
+            -- Re-apply if the game resets them
 
             sound:GetPropertyChangedSignal("SoundId"):Connect(
-                applyReplacement
+                function()
+
+                    if sound.SoundId ~= assetId then
+                        sound.SoundId = assetId
+                    end
+
+                end
             )
 
             sound:GetPropertyChangedSignal("Volume"):Connect(
-                applyReplacement
+                function()
+
+                    if sound.Volume ~= SeekMusicVolume then
+                        sound.Volume = SeekMusicVolume
+                    end
+
+                end
             )
+
         end
 
-        local seekMusic = floorRep:FindFirstChild("SeekMusic")
+        local seekMusic =
+            floorRep:FindFirstChild("SeekMusic")
 
         if seekMusic then
             hookSound(seekMusic)
         end
 
+        -- If the game re-creates it
+
         floorRep.ChildAdded:Connect(function(child)
+
             if child.Name == "SeekMusic" then
-                task.defer(function()
-                    hookSound(child)
-                end)
+                task.wait()
+                hookSound(child)
             end
+
         end)
 
+        -- If the game clones it elsewhere (Workspace / SoundService)
+
         local function checkClone(obj)
-            if obj:IsA("Sound") and obj.Name == "SeekMusic" then
-                task.defer(function()
-                    hookSound(obj)
-                end)
+
+            if obj:IsA("Sound")
+                and obj.Name == "SeekMusic" then
+
+                task.wait()
+                hookSound(obj)
+
             end
+
         end
 
         Workspace.DescendantAdded:Connect(checkClone)
         SoundService.DescendantAdded:Connect(checkClone)
 
-        caption("music replacer loaded!", "info", 5)
+        caption(
+            "music replacer loaded!",
+            "info",
+            5
+        )
+
     end)
 
-    if not ok then
-        warn("[Seek Music Replacer]", err)
-    end
 end)
 
+
 -- =========================================================
--- Blue Health Music Replacer
+-- Blue Health Music Replacer (Intro.ogg)
+-- Downloads once into the executor's file workspace and
+-- replaces PlayerGui.MainUI.Initiator.Main_Game.Health.Music.Blue.
 -- =========================================================
 
-local BlueMusicURL =
-    "https://raw.githubusercontent.com/ala22221/sounds/main/Intro.ogg"
-
+local BlueMusicURL = "https://raw.githubusercontent.com/ala22221/sounds/main/Intro.ogg"
 local BlueMusicFolder = "CustomMusic"
 local BlueMusicFile = BlueMusicFolder .. "/Intro.ogg"
 local BlueMusicVolume = 1
 local BlueMusicLooped = true
 
 task.spawn(function()
-    if not (
-        writefile and isfile and getcustomasset
-        and makefolder and isfolder
-    ) then
+    if not (writefile and isfile and getcustomasset and makefolder and isfolder) then
         caption("Executor doesn't support custom audio.", "info", 5)
         return
     end
@@ -597,12 +439,13 @@ task.spawn(function()
             makefolder(BlueMusicFolder)
         end
 
+        -- Download only when the cached file is missing.
         if not isfile(BlueMusicFile) then
-            local success, data = pcall(function()
+            local downloadOK, data = pcall(function()
                 return game:HttpGet(BlueMusicURL)
             end)
 
-            if not success or not data or #data == 0 then
+            if not downloadOK or not data or #data == 0 then
                 error("Intro.ogg download failed.")
             end
 
@@ -612,8 +455,12 @@ task.spawn(function()
         local assetId = getcustomasset(BlueMusicFile)
 
         local function findBlueMusic()
-            local gui = Plr:FindFirstChildOfClass("PlayerGui")
-            local mainUI = gui and gui:FindFirstChild("MainUI")
+            local playerGui = Plr:FindFirstChildOfClass("PlayerGui")
+            if not playerGui then
+                return nil
+            end
+
+            local mainUI = playerGui:FindFirstChild("MainUI")
             local initiator = mainUI and mainUI:FindFirstChild("Initiator")
             local mainGame = initiator and initiator:FindFirstChild("Main_Game")
             local health = mainGame and mainGame:FindFirstChild("Health")
@@ -630,7 +477,7 @@ task.spawn(function()
         local hookedSounds = {}
 
         local function hookBlueMusic(sound)
-            if not sound:IsA("Sound") or hookedSounds[sound] then
+            if not sound or not sound:IsA("Sound") or hookedSounds[sound] then
                 return
             end
 
@@ -641,50 +488,73 @@ task.spawn(function()
                     return
                 end
 
-                sound.SoundId = assetId
-                sound.Volume = BlueMusicVolume
-                sound.Looped = BlueMusicLooped
+                if sound.SoundId ~= assetId then
+                    sound.SoundId = assetId
+                end
+
+                if sound.Volume ~= BlueMusicVolume then
+                    sound.Volume = BlueMusicVolume
+                end
+
+                if sound.Looped ~= BlueMusicLooped then
+                    sound.Looped = BlueMusicLooped
+                end
             end
 
             applyReplacement()
 
-            sound:GetPropertyChangedSignal("SoundId"):Connect(applyReplacement)
-            sound:GetPropertyChangedSignal("Volume"):Connect(applyReplacement)
-            sound:GetPropertyChangedSignal("Looped"):Connect(applyReplacement)
+            sound:GetPropertyChangedSignal("SoundId"):Connect(function()
+                if sound.Parent and sound.SoundId ~= assetId then
+                    sound.SoundId = assetId
+                end
+            end)
 
+            sound:GetPropertyChangedSignal("Volume"):Connect(function()
+                if sound.Parent and sound.Volume ~= BlueMusicVolume then
+                    sound.Volume = BlueMusicVolume
+                end
+            end)
+
+            sound:GetPropertyChangedSignal("Looped"):Connect(function()
+                if sound.Parent and sound.Looped ~= BlueMusicLooped then
+                    sound.Looped = BlueMusicLooped
+                end
+            end)
+
+            -- Start playing after applying the local replacement.
             pcall(function()
                 sound:Play()
             end)
         end
 
-        local gui = Plr:WaitForChild("PlayerGui", 30)
-
-        if not gui then
+        -- Wait for the existing Blue sound, if it hasn't loaded yet.
+        local playerGui = Plr:WaitForChild("PlayerGui", 30)
+        if not playerGui then
             error("PlayerGui did not load.")
         end
 
         local blue = findBlueMusic()
-
         if not blue then
-            local mainUI = gui:WaitForChild("MainUI", 30)
+            local mainUI = playerGui:WaitForChild("MainUI", 30)
             local initiator = mainUI and mainUI:WaitForChild("Initiator", 30)
             local mainGame = initiator and initiator:WaitForChild("Main_Game", 30)
             local health = mainGame and mainGame:WaitForChild("Health", 30)
             local music = health and health:WaitForChild("Music", 30)
-
             blue = music and music:WaitForChild("Blue", 30)
         end
 
-        if not blue or not blue:IsA("Sound") then
-            error("Could not find guiding light music.")
+        if blue and blue:IsA("Sound") then
+            hookBlueMusic(blue)
+        else
+            error("Could not find the guiding light music.")
         end
 
-        hookBlueMusic(blue)
-
-        gui.DescendantAdded:Connect(function(obj)
+        -- Re-apply if the game replaces the Blue sound instance.
+        playerGui.DescendantAdded:Connect(function(obj)
             if obj:IsA("Sound") and obj.Name == "Blue" then
                 task.defer(function()
-                    if findBlueMusic() == obj then
+                    local current = findBlueMusic()
+                    if current == obj then
                         hookBlueMusic(obj)
                     end
                 end)
@@ -695,19 +565,22 @@ task.spawn(function()
     end)
 
     if not ok then
-        warn("[Guiding Light Music Replacer]", err)
-        caption("guiding light music replacement failed.", "info", 5)
+        warn("[Guiding Light Music Replacer] " .. tostring(err))
+        caption("guiding light music replacement failed. Check console.", "info", 5)
     end
 end)
 
 -- =========================================================
--- Entity Spawner Module
+-- Spawner
 -- =========================================================
 
 local SpawnerURL =
     "https://raw.githubusercontent.com/ala22221/Backups-of-some-stuff/refs/heads/main/Fixed%20Spawner%20by%20DripCapybara.lua"
 
-local SpawnerSource = game:HttpGet(SpawnerURL)
+local SpawnerSource =
+    game:HttpGet(SpawnerURL)
+
+-- Fix broken Death UI reference
 
 SpawnerSource = SpawnerSource:gsub(
     'if CG:FindFirstChild%("JumpscareGui"%)%s*or%s*%(%s*Plr%.PlayerGui%.MainUI%.Death%.HelpfulDialogue%.Visible%s*and%s*not%s*Plr%.PlayerGui%.MainUI%.DeathPanelDead%.Visible%s*%) then',
@@ -719,26 +592,42 @@ SpawnerSource = SpawnerSource:gsub(
     'false'
 )
 
-local SpawnerLoader, SpawnerError = loadstring(SpawnerSource)
+local SpawnerLoader, SpawnerError =
+    loadstring(SpawnerSource)
 
 if not SpawnerLoader then
-    error("Spawner compile error: " .. tostring(SpawnerError))
+
+    error(
+        "Spawner compile error: "
+        .. tostring(SpawnerError)
+    )
+
 end
 
 local Spawner = SpawnerLoader()
 
-if type(Spawner) ~= "table"
-    or type(Spawner.createEntity) ~= "function"
-    or type(Spawner.runEntity) ~= "function" then
-    error("Spawner module failed to load correctly.")
+if type(Spawner) ~= "table" then
+    error("Spawner failed to load.")
 end
 
+if type(Spawner.createEntity) ~= "function" then
+    error("Spawner.createEntity is missing.")
+end
+
+if type(Spawner.runEntity) ~= "function" then
+    error("Spawner.runEntity is missing.")
+end
+
+
+
 -- =========================================================
--- Seek Chase Cleanup
+-- Despawn Models During Seek Chase (Optimized)
 -- =========================================================
 
 local SeekDespawnEnabled = true
+local Workspace = game:GetService("Workspace")
 
+local SEEK_NAME = "SeekMovingNewClone"
 local TARGET_PARTS = {
     Rebound = true,
     RushNew = true
@@ -747,37 +636,49 @@ local TARGET_PARTS = {
 local seekActive = false
 local cleanupInProgress = false
 
+-- Find the nearest Model containing a targeted part.
 local function getTargetModel(part)
-    if not part or not part:IsA("BasePart")
-        or not TARGET_PARTS[part.Name] then
+    if not part or not part:IsA("BasePart") then
+        return nil
+    end
+
+    if not TARGET_PARTS[part.Name] then
         return nil
     end
 
     local current = part.Parent
+    local nearestModel = nil
 
     while current and current ~= Workspace do
         if current:IsA("Model") then
-            local seekClone = Workspace:FindFirstChild(SEEK_NAME)
-
-            if seekClone and (
-                current == seekClone
-                or current:IsDescendantOf(seekClone)
-            ) then
-                return nil
-            end
-
-            return current
+            nearestModel = current
+            break
         end
 
         current = current.Parent
     end
 
-    return nil
+    -- Never destroy Seek itself or anything inside Seek.
+    if nearestModel then
+        local seekClone = Workspace:FindFirstChild(SEEK_NAME)
+
+        if seekClone and (
+            nearestModel == seekClone
+            or nearestModel:IsDescendantOf(seekClone)
+        ) then
+            return nil
+        end
+    end
+
+    return nearestModel
 end
 
 local function removeTargetPart(part)
-    if not SeekDespawnEnabled
-        or not Workspace:FindFirstChild(SEEK_NAME) then
+    if not SeekDespawnEnabled then
+        return
+    end
+
+    if not Workspace:FindFirstChild(SEEK_NAME) then
         return
     end
 
@@ -790,22 +691,28 @@ local function removeTargetPart(part)
     end
 end
 
+-- One full scan when Seek appears.
+-- This replaces the expensive repeating Workspace scan.
 local function cleanupExistingTargets()
-    if cleanupInProgress or not SeekDespawnEnabled
-        or not Workspace:FindFirstChild(SEEK_NAME) then
+    if cleanupInProgress or not SeekDespawnEnabled then
+        return
+    end
+
+    if not Workspace:FindFirstChild(SEEK_NAME) then
         return
     end
 
     cleanupInProgress = true
 
-    local ok, err = pcall(function()
+    local success, err = pcall(function()
+        local descendants = Workspace:GetDescendants()
         local modelsToRemove = {}
 
-        for _, obj in ipairs(Workspace:GetDescendants()) do
+        for _, obj in ipairs(descendants) do
             if obj:IsA("BasePart") and TARGET_PARTS[obj.Name] then
                 local model = getTargetModel(obj)
 
-                if model then
+                if model and model.Parent then
                     modelsToRemove[model] = true
                 end
             end
@@ -813,21 +720,26 @@ local function cleanupExistingTargets()
 
         for model in pairs(modelsToRemove) do
             if model.Parent then
-                model:Destroy()
+                pcall(function()
+                    model:Destroy()
+                end)
             end
         end
     end)
 
     cleanupInProgress = false
 
-    if not ok then
-        warn("[Seek Cleanup]", err)
+    if not success then
+        warn("[Seek Cleanup] Error:", err)
     end
 end
 
+-- Detect Seek appearing or disappearing.
 local function updateSeekState()
+    local seekClone = Workspace:FindFirstChild(SEEK_NAME)
     local wasActive = seekActive
-    seekActive = Workspace:FindFirstChild(SEEK_NAME) ~= nil
+
+    seekActive = seekClone ~= nil
 
     if seekActive and not wasActive then
         task.defer(cleanupExistingTargets)
@@ -846,142 +758,192 @@ Workspace.ChildRemoved:Connect(function(child)
     end
 end)
 
+-- Only react to newly added parts with the exact target names.
+-- Do not rescan Workspace for unrelated additions.
 Workspace.DescendantAdded:Connect(function(obj)
-    if SeekDespawnEnabled and seekActive
-        and obj:IsA("BasePart")
-        and TARGET_PARTS[obj.Name] then
+    if not SeekDespawnEnabled or not seekActive then
+        return
+    end
+
+    if obj:IsA("BasePart") and TARGET_PARTS[obj.Name] then
         task.defer(function()
             removeTargetPart(obj)
         end)
     end
 end)
 
+-- Handle Seek already existing when this section starts.
 updateSeekState()
 
--- =========================================================
--- Entity Factory
--- =========================================================
-
-local function createEntity(config, label)
-    local ok, entityTable = pcall(function()
-        return Spawner.createEntity(config)
-    end)
-
-    if not ok or not entityTable then
-        warn("[" .. label .. "] Failed to create entity:", entityTable)
-        return nil
-    end
-
-    return entityTable
-end
-
-local function runEntity(entityTable, label)
-    task.spawn(function()
-        local ok, err = pcall(function()
-            Spawner.runEntity(entityTable)
-        end)
-
-        if not ok then
-            warn("[" .. label .. "] Failed to run entity:", err)
-        end
-    end)
-end
-
-local function setDebugCallbacks(entityTable, callbacks)
-    if not entityTable.Debug then
-        warn("[Achievements] Debug callbacks unavailable for entity.")
-        return
-    end
-
-    for name, callback in pairs(callbacks) do
-        entityTable.Debug[name] = callback
-    end
-end
 
 -- =========================================================
 -- Spawn Deer God
 -- =========================================================
 
 local function spawnDeerGod()
-    local entityTable = createEntity({
-        CustomName = "Deer God",
-        Model = "rbxassetid://12262883448",
-        Speed = 25,
-        DelayTime = 4,
-        HeightOffset = 0,
-        CanKill = true,
-        KillRange = 50,
-        BackwardsMovement = false,
-        BreakLights = true,
-        FlickerLights = {true, 1},
 
-        Cycles = {
-            Min = 0,
-            Max = 0,
-            WaitTime = 2
-        },
+    local success, entityTable =
+        pcall(function()
 
-        CamShake = {
-            false,
-            {3.5, 20, 0.1, 1},
-            100
-        },
+            return Spawner.createEntity({
 
-        Jumpscare = {
-            true,
-            {
-                Image1 = "rbxassetid://0",
-                Image2 = "rbxassetid://0",
-                Shake = true,
+                CustomName = "Deer God",
 
-                Sound1 = {10483790459, {Volume = 0.5}},
-                Sound2 = {116282238939992, {Volume = 0.5}},
+                Model =
+                    "rbxassetid://12262883448",
 
-                Flashing = {
+                Speed = 25,
+
+                DelayTime = 4,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = false,
+
+                BreakLights = true,
+
+                FlickerLights = {
                     true,
-                    Color3.fromRGB(255, 255, 255)
+                    1
                 },
 
-                Tease = {
+                Cycles = {
+                    Min = 0,
+                    Max = 0,
+                    WaitTime = 2
+                },
+
+                CamShake = {
                     false,
-                    Min = 1,
-                    Max = 3
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://0",
+
+                        Image2 =
+                            "rbxassetid://0",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            116282238939992,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                255,
+                                255,
+                                255
+                            )
+                        },
+
+                        Tease = {
+                            false,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
                 }
-            }
-        },
 
-        CustomDialog = {
-            "You can",
-            "put your",
-            "custom death",
-            "message here."
-        }
-    }, "Deer God")
+            })
 
-    if not entityTable then
+        end)
+
+    if not success or not entityTable then
         return
     end
 
-    setDebugCallbacks(entityTable, {
-        OnEntitySpawned = function() end,
+    if entityTable.Debug then
 
-        OnEntityDespawned = function()
-            giveAchievement("DeerGod", {
-                Title = "Why are you running?",
-                Desc = "Encounter the Deer God",
-                Reason = "...",
-                Image = "rbxassetid://11395249132"
-            })
-        end,
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
 
-        OnEntityStartMoving = function() end,
-        OnEntityFinishedRebound = function() end,
-        OnEntityEnteredRoom = function() end,
-        OnLookAtEntity = function() end,
-        OnDeath = function() end
-    })
+        entityTable.Debug.OnEntityDespawned =
+            function()
 
-    runEntity(entityTable, "Deer God")
+                giveAchievement(
+                    "DeerGod",
+                    {
+                        Title =
+                            "Why are you running?",
+
+                        Desc =
+                            "Encounter the Deer God",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
 end
 
 -- =========================================================
@@ -989,118 +951,192 @@ end
 -- =========================================================
 
 local function spawnDepth()
-    local entityTable = createEntity({
-        CustomName = "Depth",
-        Model = "rbxassetid://136609118183210",
-        Speed = 150,
-        DelayTime = 4,
-        HeightOffset = 0,
-        CanKill = true,
-        KillRange = 50,
-        BackwardsMovement = false,
-        BreakLights = true,
-        FlickerLights = {true, 1},
 
-        Cycles = {
-            Min = 1,
-            Max = 4,
-            WaitTime = 2
-        },
+    local success, entityTable =
+        pcall(function()
 
-        CamShake = {
-            false,
-            {3.5, 20, 0.1, 1},
-            100
-        },
+            return Spawner.createEntity({
 
-        Jumpscare = {
-            false,
-            {
-                Image1 = "rbxassetid://11487294392",
-                Image2 = "rbxassetid://123822082171984",
-                Shake = true,
+                CustomName = "Depth",
 
-                Sound1 = {101127627832457, {Volume = 0.5}},
-                Sound2 = {80686090832850, {Volume = 0.5}},
+                Model =
+                    "rbxassetid://136609118183210",
 
-                Flashing = {
+                Speed = 150,
+
+                DelayTime = 4,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = false,
+
+                BreakLights = true,
+
+                FlickerLights = {
                     true,
-                    Color3.fromRGB(0, 0, 255)
+                    1
                 },
 
-                Tease = {
-                    true,
+                Cycles = {
                     Min = 1,
-                    Max = 2
+                    Max = 4,
+                    WaitTime = 2
+                },
+
+                CamShake = {
+                    false,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://11487294392",
+
+                        Image2 =
+                            "rbxassetid://123822082171984",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            101127627832457,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            80686090832850,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                0,
+                                0,
+                                255
+                            )
+                        },
+
+                        Tease = {
+                            true,
+                            Min = 1,
+                            Max = 2
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
                 }
-            }
-        },
 
-        CustomDialog = {
-            "You can",
-            "put your",
-            "custom death",
-            "message here."
-        }
-    }, "Depth")
+            })
 
-    if not entityTable then
+        end)
+
+    if not success or not entityTable then
         return
     end
 
-    setDebugCallbacks(entityTable, {
-        OnEntitySpawned = function() end,
+    if entityTable.Debug then
 
-        OnEntityDespawned = function()
-            local character = Plr.Character
-
-            if not character or character:GetAttribute("IsDead") then
-                return
+        entityTable.Debug.OnEntitySpawned =
+            function()
             end
 
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
+        entityTable.Debug.OnEntityDespawned =
+            function()
 
-            if not humanoid or humanoid.Health <= 0 then
-                return
-            end
+                local character =
+                    Plr.Character
 
-            giveAchievement("Depth", {
-                Title = "Deep",
-                Desc = "Survive Depth",
-                Reason = "...",
-                Image = "rbxassetid://10840981841"
-            })
-        end,
-
-        OnEntityStartMoving = function() end,
-        OnEntityFinishedRebound = function() end,
-        OnEntityEnteredRoom = function() end,
-        OnLookAtEntity = function() end,
-
-        OnDeath = function()
-            task.spawn(function()
-                local ok, err = pcall(function()
-                    local url =
-                        "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/depthyscare.lua"
-
-                    local source = game:HttpGet(url)
-                    local loader, compileError = loadstring(source)
-
-                    if not loader then
-                        error(compileError or "Depth jumpscare compilation failed")
-                    end
-
-                    loader()
-                end)
-
-                if not ok then
-                    warn("[Depth Jumpscare]", err)
+                if not character then
+                    return
                 end
-            end)
-        end
-    })
 
-    runEntity(entityTable, "Depth")
+                if character:GetAttribute("IsDead") then
+                    return
+                end
+
+                local humanoid =
+                    character:FindFirstChildOfClass(
+                        "Humanoid"
+                    )
+
+                if not humanoid then
+                    return
+                end
+
+                if humanoid.Health <= 0 then
+                    return
+                end
+
+                giveAchievement(
+                    "Depth",
+                    {
+                        Title = "Deep",
+
+                        Desc =
+                            "Survive Depth",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
 end
 
 -- =========================================================
@@ -1108,106 +1144,180 @@ end
 -- =========================================================
 
 local function spawnRebound()
-    local entityTable = createEntity({
-        CustomName = "Rebound",
-        Model = "rbxassetid://94407292964752",
-        Speed = 350,
-        DelayTime = 6,
-        HeightOffset = 0,
-        CanKill = true,
-        KillRange = 50,
-        BackwardsMovement = true,
-        BreakLights = true,
-        FlickerLights = {true, 1},
 
-        Cycles = {
-            Min = 2,
-            Max = 5,
-            WaitTime = 2
-        },
+    local success, entityTable =
+        pcall(function()
 
-        CamShake = {
-            false,
-            {3.5, 20, 0.1, 1},
-            100
-        },
+            return Spawner.createEntity({
 
-        Jumpscare = {
-            false,
-            {
-                Image1 = "rbxassetid://10483855823",
-                Image2 = "rbxassetid://10483999903",
-                Shake = true,
+                CustomName = "Rebound",
 
-                Sound1 = {10483790459, {Volume = 0.5}},
-                Sound2 = {10483837590, {Volume = 0.5}},
+                Model =
+                    "rbxassetid://94407292964752",
 
-                Flashing = {
+                Speed = 350,
+
+                DelayTime = 4,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = true,
+
+                BreakLights = true,
+
+                FlickerLights = {
                     true,
-                    Color3.fromRGB(255, 255, 255)
+                    1
                 },
 
-                Tease = {
-                    true,
-                    Min = 1,
-                    Max = 3
+                Cycles = {
+                    Min = 2,
+                    Max = 5,
+                    WaitTime = 2
+                },
+
+                CamShake = {
+                    false,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    false,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://10483999903",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            10483837590,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                255,
+                                255,
+                                255
+                            )
+                        },
+
+                        Tease = {
+                            true,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
                 }
-            }
-        },
 
-        CustomDialog = {
-            "You can",
-            "put your",
-            "custom death",
-            "message here."
-        }
-    }, "Rebound")
+            })
 
-    if not entityTable then
+        end)
+
+    if not success or not entityTable then
         return
     end
 
-    setDebugCallbacks(entityTable, {
-        OnEntitySpawned = function() end,
+    if entityTable.Debug then
 
-        OnEntityDespawned = function()
-            giveAchievement("Rebound", {
-                Title = "Back to Back",
-                Desc = "Encounter Rebound",
-                Reason = "...",
-                Image = "rbxassetid://11666287209"
-            })
-        end,
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
 
-        OnEntityStartMoving = function() end,
-        OnEntityFinishedRebound = function() end,
-        OnEntityEnteredRoom = function() end,
-        OnLookAtEntity = function() end,
+        entityTable.Debug.OnEntityDespawned =
+            function()
 
-        OnDeath = function()
-            task.spawn(function()
-                local ok, err = pcall(function()
-                    local source = game:HttpGet(
-                        "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscareNEW.lua"
-                    )
+                giveAchievement(
+                    "Rebound",
+                    {
+                        Title =
+                            "Back to Back",
 
-                    local loader, compileError = loadstring(source)
+                        Desc =
+                            "Encounter Rebound",
 
-                    if not loader then
-                        error(compileError or "Rebound jumpscare compilation failed")
-                    end
+                        Reason = "...",
 
-                    loader()
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+             end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+
+                pcall(function()
+
+                    loadstring(
+                        game:HttpGet(
+                            "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/reboundscareNEW.lua"
+                        )
+                    )()
+
                 end)
 
-                if not ok then
-                    warn("[Rebound Jumpscare]", err)
-                end
-            end)
-        end
-    })
+            end
 
-    runEntity(entityTable, "Rebound")
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
 end
 
 -- =========================================================
@@ -1215,85 +1325,170 @@ end
 -- =========================================================
 
 local function spawnA60()
-    local entityTable = createEntity({
-        CustomName = "A-60",
-        Model = "rbxassetid://93183888655290",
-        Speed = 450,
-        DelayTime = 10,
-        HeightOffset = 0,
-        CanKill = true,
-        KillRange = 50,
-        BackwardsMovement = false,
-        BreakLights = true,
-        FlickerLights = {true, 1},
 
-        Cycles = {
-            Min = 1,
-            Max = 4,
-            WaitTime = 0
-        },
+    local success, entityTable =
+        pcall(function()
 
-        CamShake = {
-            true,
-            {3.5, 20, 0.1, 1},
-            100
-        },
+            return Spawner.createEntity({
 
-        Jumpscare = {
-            true,
-            {
-                Image1 = "rbxassetid://10483855823",
-                Image2 = "rbxassetid://11914051787",
-                Shake = true,
+                CustomName = "A-60",
 
-                Sound1 = {10483790459, {Volume = 0.5}},
-                Sound2 = {97122574985171, {Volume = 0.5}},
+                Model =
+                    "rbxassetid://93183888655290",
 
-                Flashing = {
+                Speed = 450,
+
+                DelayTime = 10,
+
+                HeightOffset = 0,
+
+                CanKill = true,
+
+                KillRange = 50,
+
+                BackwardsMovement = false,
+
+                BreakLights = true,
+
+                FlickerLights = {
                     true,
-                    Color3.fromRGB(170, 0, 0)
+                    1
                 },
 
-                Tease = {
-                    false,
+                Cycles = {
                     Min = 1,
-                    Max = 3
+                    Max = 4,
+                    WaitTime = 0
+                },
+
+                CamShake = {
+                    true,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://11914051787",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            97122574985171,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                170,
+                                0,
+                                0
+                            )
+                        },
+
+                        Tease = {
+                            false,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
                 }
-            }
-        },
 
-        CustomDialog = {
-            "You can",
-            "put your",
-            "custom death",
-            "message here."
-        }
-    }, "A-60")
+            })
 
-    if not entityTable then
+        end)
+
+    if not success or not entityTable then
         return
     end
 
-    setDebugCallbacks(entityTable, {
-        OnEntitySpawned = function() end,
+    if entityTable.Debug then
 
-        OnEntityDespawned = function()
-            giveAchievement("A-69", {
-                Title = "A Nostalgic Fright!",
-                Desc = "Encounter the rare entity called A-60",
-                Reason = "...",
-                Image = "rbxassetid://11395251044"
-            })
-        end,
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
 
-        OnEntityStartMoving = function() end,
-        OnEntityFinishedRebound = function() end,
-        OnEntityEnteredRoom = function() end,
-        OnLookAtEntity = function() end,
-        OnDeath = function() end
-    })
+        entityTable.Debug.OnEntityDespawned =
+            function()
 
-    runEntity(entityTable, "A-60")
+                giveAchievement(
+                    "A-69",
+                    {
+                        Title =
+                            "A Nostalgic Fright!",
+
+                        Desc =
+                            "Encounter the rare entity called A-60",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://80921932542636"
+                    }
+                )
+
+             end
+
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
 end
 
 -- =========================================================
@@ -1301,82 +1496,165 @@ end
 -- =========================================================
 
 local function spawnGreed()
-    local entityTable = createEntity({
-        CustomName = "Greed",
-        Model = "rbxassetid://128332367846866",
-        Speed = 0,
-        DelayTime = 10,
-        HeightOffset = 0,
-        CanKill = false,
-        KillRange = 50,
-        BackwardsMovement = true,
-        BreakLights = true,
-        FlickerLights = {true, 1},
 
-        Cycles = {
-            Min = 1,
-            Max = 4,
-            WaitTime = 0
-        },
+    local success, entityTable =
+        pcall(function()
 
-        CamShake = {
-            true,
-            {3.5, 20, 0.1, 1},
-            100
-        },
+            return Spawner.createEntity({
 
-        Jumpscare = {
-            true,
-            {
-                Image1 = "rbxassetid://10483855823",
-                Image2 = "rbxassetid://11914051787",
-                Shake = true,
+                CustomName = "Greed",
 
-                Sound1 = {10483790459, {Volume = 0.5}},
-                Sound2 = {97122574985171, {Volume = 0.5}},
+                Model =
+                    "rbxassetid://128332367846866",
 
-                Flashing = {
+                Speed = 0,
+
+                DelayTime = 10,
+
+                HeightOffset = 0,
+
+                CanKill = false,
+
+                KillRange = 50,
+
+                BackwardsMovement = true,
+
+                BreakLights = true,
+
+                FlickerLights = {
                     true,
-                    Color3.fromRGB(170, 0, 0)
+                    1
                 },
 
-                Tease = {
-                    false,
+                Cycles = {
                     Min = 1,
-                    Max = 3
+                    Max = 4,
+                    WaitTime = 0
+                },
+
+                CamShake = {
+                    true,
+                    {3.5, 20, 0.1, 1},
+                    100
+                },
+
+                Jumpscare = {
+
+                    true,
+
+                    {
+
+                        Image1 =
+                            "rbxassetid://10483855823",
+
+                        Image2 =
+                            "rbxassetid://11914051787",
+
+                        Shake = true,
+
+                        Sound1 = {
+                            10483790459,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Sound2 = {
+                            97122574985171,
+                            {
+                                Volume = 0.5
+                            }
+                        },
+
+                        Flashing = {
+                            true,
+                            Color3.fromRGB(
+                                170,
+                                0,
+                                0
+                            )
+                        },
+
+                        Tease = {
+                            false,
+                            Min = 1,
+                            Max = 3
+                        }
+
+                    }
+
+                },
+
+                CustomDialog = {
+                    "You can",
+                    "put your",
+                    "custom death",
+                    "message here."
                 }
-            }
-        },
 
-        CustomDialog = {
-            "You can",
-            "put your",
-            "custom death",
-            "message here."
-        }
-    }, "Greed")
+            })
 
-    if not entityTable then
+        end)
+
+    if not success or not entityTable then
         return
     end
 
-    setDebugCallbacks(entityTable, {
-        OnEntitySpawned = function() end,
-        OnEntityDespawned = function() end,
-        OnEntityStartMoving = function() end,
-        OnEntityFinishedRebound = function() end,
-        OnEntityEnteredRoom = function() end,
-        OnLookAtEntity = function() end,
-        OnDeath = function() end
-    })
+    if entityTable.Debug then
 
-    runEntity(entityTable, "Greed")
+        entityTable.Debug.OnEntitySpawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityDespawned =
+            function()
+            end
+
+        entityTable.Debug.OnEntityStartMoving =
+            function()
+            end
+
+        entityTable.Debug.OnEntityFinishedRebound =
+            function()
+            end
+
+        entityTable.Debug.OnEntityEnteredRoom =
+            function()
+            end
+
+        entityTable.Debug.OnLookAtEntity =
+            function()
+            end
+
+        entityTable.Debug.OnDeath =
+            function()
+            end
+
+    end
+
+    task.spawn(function()
+
+        pcall(function()
+
+            Spawner.runEntity(entityTable)
+
+        end)
+
+    end)
+
 end
 
 -- =========================================================
--- Door-Based Random Spawning
+-- Door-Based Random Entity Spawning
 -- =========================================================
 
+-- Chances are percentages. Change these values if desired.
+local DepthSpawnChance = 15
+local ReboundSpawnChance = 10
+local DeerGodSpawnChance = 10
+-- A60SpawnChance and GreedSpawnChance are defined in Spawn Chances above.
+
+-- Use the same full LatestRoom path as the original Greed door handler.
 local GameData = ReplicatedStorage:WaitForChild("GameData")
 local LatestRoom = GameData:WaitForChild("LatestRoom")
 
@@ -1389,6 +1667,8 @@ local function rollSpawn(chance, spawnFunction)
     end
 end
 
+-- Every change to GameData.LatestRoom.Value represents a newly reached room.
+-- All automatic entity spawning is handled here; no entity spawn timers remain.
 LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
     local newRoom = LatestRoom.Value
 
@@ -1398,6 +1678,7 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
 
     lastRoom = newRoom
 
+    -- Do not even roll an entity's chance until its minimum door is reached.
     if newRoom >= 5 then
         rollSpawn(DepthSpawnChance, spawnDepth)
     end
@@ -1414,8 +1695,8 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
         rollSpawn(A60SpawnChance, spawnA60)
     end
 
-    greedDoorCounter += 1
-
+    -- Preserve Greed's original behavior: one 20% roll every 5 door changes.
+    greedDoorCounter = greedDoorCounter + 1
     if greedDoorCounter >= GreedEveryDoors then
         greedDoorCounter = 0
         rollSpawn(GreedSpawnChance, spawnGreed)
@@ -1430,16 +1711,22 @@ local lastCommand = ""
 local lastCommandTime = 0
 
 local function handleCommand(message)
+
     if not IsAdmin then
         return
     end
 
-    message = tostring(message):lower()
-    message = message:match("^%s*(.-)%s*$")
+    message =
+        tostring(message):lower()
+
+    message =
+        message:match("^%s*(.-)%s*$")
 
     local now = os.clock()
 
-    if message == lastCommand and now - lastCommandTime < 0.25 then
+    if message == lastCommand
+        and now - lastCommandTime < 0.25 then
+
         return
     end
 
@@ -1447,16 +1734,27 @@ local function handleCommand(message)
     lastCommandTime = now
 
     if message == "/depth" then
+
         spawnDepth()
+
     elseif message == "/rebound" then
+
         spawnRebound()
+
     elseif message == "/deergod" then
+
         spawnDeerGod()
+
     elseif message == "/a60" then
+
         spawnA60()
+
     elseif message == "/greed" then
+
         spawnGreed()
+
     end
+
 end
 
 -- =========================================================
@@ -1464,17 +1762,27 @@ end
 -- =========================================================
 
 pcall(function()
-    TextChatService.MessageReceived:Connect(function(message)
-        if not message.TextSource then
-            return
-        end
 
-        if message.TextSource.UserId ~= Plr.UserId then
-            return
-        end
+    TextChatService.MessageReceived:Connect(
+        function(message)
 
-        handleCommand(message.Text)
-    end)
+            if not message.TextSource then
+                return
+            end
+
+            if message.TextSource.UserId
+                ~= Plr.UserId then
+
+                return
+            end
+
+            handleCommand(
+                message.Text
+            )
+
+        end
+    )
+
 end)
 
 -- =========================================================
@@ -1482,9 +1790,13 @@ end)
 -- =========================================================
 
 pcall(function()
-    Plr.Chatted:Connect(function(message)
-        handleCommand(message)
-    end)
-end)
 
-print("[Easy'nt Mode] Script loaded.")
+    Plr.Chatted:Connect(
+        function(message)
+
+            handleCommand(message)
+
+        end
+    )
+
+end)
