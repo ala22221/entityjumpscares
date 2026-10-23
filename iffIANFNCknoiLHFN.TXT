@@ -336,7 +336,7 @@ task.spawn(function()
             Title = "Welcome",
             Desc = "This hotel seems old..",
             Reason = "...",
-            Image = "rbxassetid://13298908919"
+            Image = "rbxassetid://13020415018"
         }
     )
 
@@ -1000,7 +1000,7 @@ local function spawnDeerGod()
                         Reason = "...",
 
                         Image =
-                            "rbxassetid://80921932542636"
+                            "rbxassetid://11395249132"
                     }
                 )
 
@@ -1193,7 +1193,7 @@ local function spawnDepth()
                         Reason = "...",
 
                         Image =
-                            "rbxassetid://80921932542636"
+                            "rbxassetid://10840981841"
                     }
                 )
 
@@ -1217,6 +1217,21 @@ local function spawnDepth()
 
         entityTable.Debug.OnDeath =
             function()
+                -- Run the custom Depth death jumpscare when Depth kills the player.
+                task.spawn(function()
+                    local ok, err = pcall(function()
+                        local source = game:HttpGet(
+                            "https://raw.githubusercontent.com/ala22221/entityjumpscares/refs/heads/main/depthyscare.lua"
+                        )
+                        local chunk = loadstring(source)
+                        assert(chunk, "Depth jumpscare script failed to compile")
+                        chunk()
+                    end)
+
+                    if not ok then
+                        warn("[Easy'nt Mode] Depth jumpscare failed to load: " .. tostring(err))
+                    end
+                end)
             end
 
     end
@@ -1363,7 +1378,7 @@ local function spawnRebound()
                         Reason = "...",
 
                         Image =
-                            "rbxassetid://80921932542636"
+                            "rbxassetid://11666287209"
                     }
                 )
 
@@ -1544,7 +1559,7 @@ local function spawnA60()
                         Reason = "...",
 
                         Image =
-                            "rbxassetid://80921932542636"
+                            "rbxassetid://11395251044"
                     }
                 )
 
@@ -1698,7 +1713,25 @@ local function spawnGreed()
 
         entityTable.Debug.OnEntitySpawned =
             function()
-            end
+
+                giveAchievement(
+                    "GreedyFUCK",
+                    {
+                        Title =
+                            "SHUT UP!",
+
+                        Desc =
+                            "Why are you so loud?",
+
+                        Reason = "...",
+
+                        Image =
+                            "rbxassetid://10851570190"
+                    }
+                )
+
+             end
+
 
         entityTable.Debug.OnEntityDespawned =
             function()
