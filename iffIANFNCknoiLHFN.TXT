@@ -27,11 +27,11 @@ pcall(function()
 
     Plr.PlayerGui.MainUI.Initiator.Main_Game
         .RemoteListener.Modules.Screech.Caught.SoundId =
-        "rbxassetid://93333189398977"
+        "rbxassetid://297569488"
 
     Plr.PlayerGui.MainUI.Initiator.Main_Game
         .RemoteListener.Modules.Screech.Attack.SoundId =
-        "rbxassetid://9125713501"
+        "rbxassetid://18967004856"
 end)
 
 -- =========================================================
