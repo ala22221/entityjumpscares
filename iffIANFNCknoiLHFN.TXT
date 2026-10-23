@@ -14,6 +14,100 @@ local SoundService = game:GetService("SoundService")
 
 local Plr = Players.LocalPlayer
 
+-- =========================================================
+-- Hide Monster + Screech Changer
+-- =========================================================
+
+local HIDE_SCARE_SOUND_ID = "rbxassetid://5263560896"
+local SCREECH_CAUGHT_SOUND_ID = "rbxassetid://297569488"
+local SCREECH_ATTACK_SOUND_ID = "rbxassetid://18967004856"
+local SCREECH_EYE_COLOR = Color3.fromRGB(255, 0, 0)
+
+local function findDescendantByName(root, wantedName)
+    if not root then
+        return nil
+    end
+
+    local direct = root:FindFirstChild(wantedName)
+    if direct then
+        return direct
+    end
+
+    return root:FindFirstChild(wantedName, true)
+end
+
+local function setSoundId(root, soundName, soundId)
+    local sound = findDescendantByName(root, soundName)
+    if sound and sound:IsA("Sound") then
+        sound.SoundId = soundId
+    end
+end
+
+local function applyHideAndScreechChanges()
+    local playerGui = Plr:FindFirstChildOfClass("PlayerGui")
+    local mainUI = playerGui and playerGui:FindFirstChild("MainUI")
+    local initiator = mainUI and mainUI:FindFirstChild("Initiator")
+    local mainGame = initiator and initiator:FindFirstChild("Main_Game")
+    local remoteListener = mainGame and mainGame:FindFirstChild("RemoteListener")
+    local modules = remoteListener and remoteListener:FindFirstChild("Modules")
+
+    -- Hide Monster scare sound
+    local hideModule = modules and findDescendantByName(modules, "HideMonster")
+    local hideScare = hideModule and findDescendantByName(hideModule, "Scare")
+    if hideScare and hideScare:IsA("Sound") then
+        hideScare.SoundId = HIDE_SCARE_SOUND_ID
+    end
+
+    -- Screech module sounds (module layout differs between DOORS versions,
+    -- so search recursively inside the Modules folder).
+    local screechModule = modules and findDescendantByName(modules, "Screech")
+    if screechModule then
+        setSoundId(screechModule, "Caught", SCREECH_CAUGHT_SOUND_ID)
+        setSoundId(screechModule, "Attack", SCREECH_ATTACK_SOUND_ID)
+    end
+
+    -- Make Screech eye parts/decals red when a Screech instance is present.
+    local function colorScreechEyes(root)
+        if not root then return end
+        for _, obj in ipairs(root:GetDescendants()) do
+            local lowerName = string.lower(obj.Name)
+            if (lowerName == "eye" or lowerName == "eyes" or lowerName == "screech eyes") then
+                if obj:IsA("BasePart") then
+                    obj.Color = SCREECH_EYE_COLOR
+                elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                    obj.Color3 = SCREECH_EYE_COLOR
+                end
+            end
+        end
+    end
+
+    colorScreechEyes(Workspace)
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        pcall(applyHideAndScreechChanges)
+    end
+end)
+
+Workspace.DescendantAdded:Connect(function(obj)
+    local lowerName = string.lower(obj.Name)
+    if lowerName == "screech" or lowerName == "eye" or lowerName == "eyes" then
+        task.defer(function()
+            pcall(applyHideAndScreechChanges)
+        end)
+    end
+end)
+
+Plr:WaitForChild("PlayerGui").DescendantAdded:Connect(function(obj)
+    local lowerName = string.lower(obj.Name)
+    if lowerName == "hideMonster" or lowerName == "screech" or lowerName == "scare" or lowerName == "caught" or lowerName == "attack" then
+        task.defer(function()
+            pcall(applyHideAndScreechChanges)
+        end)
+    end
+end)
+
 local admeen = {
     "alamgir_500newacc", -- Owner
     "glenn_larpoi"       -- Owner alt
