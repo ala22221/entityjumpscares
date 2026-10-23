@@ -39,7 +39,8 @@ end)
 -- =========================================================
 
 local admeen = {
-    "alamgir_500newacc"
+    "alamgir_500newacc" -- the owner
+    "glenn_larpoi" -- owners alt,dont demote
 }
 
 local function isAdmin(name)
