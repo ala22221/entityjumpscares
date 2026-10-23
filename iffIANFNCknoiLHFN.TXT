@@ -1013,7 +1013,7 @@ local function spawnDepth()
         },
 
         Jumpscare = {
-            true,
+            false,
             {
                 Image1 = "rbxassetid://11487294392",
                 Image2 = "rbxassetid://123822082171984",
