@@ -891,7 +891,7 @@ local function spawnDeerGod()
 
                 Speed = 25,
 
-                DelayTime = 4,
+                DelayTime = 7,
 
                 HeightOffset = 0,
 
@@ -1255,6 +1255,12 @@ end
 -- Spawn Rebound
 -- =========================================================
 
+-- Once Rebound has successfully been created for the first time,
+-- automatically spawn it again every random 3-5 room changes.
+-- The first automatic encounter still uses ReboundSpawnChance.
+local reboundHasSpawned = false
+local reboundDoorsUntilNextSpawn = nil
+
 local function spawnRebound()
 
     local success, entityTable =
@@ -1359,6 +1365,10 @@ local function spawnRebound()
     if not success or not entityTable then
         return
     end
+
+    -- A manual /rebound spawn also starts the recurring door counter.
+    reboundHasSpawned = true
+    reboundDoorsUntilNextSpawn = math.random(3, 5)
 
     if entityTable.Debug then
 
@@ -1814,7 +1824,18 @@ LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
     end
 
     if newRoom >= 12 then
-        rollSpawn(ReboundSpawnChance, spawnRebound)
+        if reboundHasSpawned then
+            -- The counter is set to a fresh random 3-5 when Rebound is created.
+            -- Each new LatestRoom value subtracts one; at zero, spawn Rebound again.
+            reboundDoorsUntilNextSpawn = (reboundDoorsUntilNextSpawn or math.random(3, 5)) - 1
+
+            if reboundDoorsUntilNextSpawn <= 0 then
+                spawnRebound()
+            end
+        else
+            -- Before its first encounter, preserve the original 10% chance.
+            rollSpawn(ReboundSpawnChance, spawnRebound)
+        end
     end
 
     if newRoom >= 23 then
