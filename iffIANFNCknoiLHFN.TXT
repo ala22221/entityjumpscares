@@ -1273,7 +1273,7 @@ local function spawnRebound()
                 Model =
                     "rbxassetid://12254145022",
 
-                Speed = 100,
+                Speed = 250,
 
                 DelayTime = 7,
 
