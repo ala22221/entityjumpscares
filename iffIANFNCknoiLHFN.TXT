@@ -1269,7 +1269,7 @@ local function spawnRebound()
 
                 Speed = 350,
 
-                DelayTime = 4,
+                DelayTime = 7,
 
                 HeightOffset = 0,
 
@@ -1287,8 +1287,8 @@ local function spawnRebound()
                 },
 
                 Cycles = {
-                    Min = 2,
-                    Max = 5,
+                    Min = 0,
+                    Max = 0,
                     WaitTime = 2
                 },
 
